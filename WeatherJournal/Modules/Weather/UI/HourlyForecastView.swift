@@ -18,8 +18,8 @@ struct HourlyForecastView: View {
                 ForEach(hours.indices, id: \.self) { index in hourCell(hours[index]) }
             }
             TemperatureTrend(hours: hours, minimum: minimum, maximum: maximum)
-                .frame(height: WeatherStyle.trendHeight)
-                .padding(.top, WeatherStyle.trendTop).padding(.bottom, WeatherStyle.trendBottom)
+                .frame(height: 44)
+                .padding(.top, AppSpacing.xSmall).padding(.bottom, AppSpacing.medium)
                 .accessibilityHidden(true)
             precipitationLabel
             precipitationRow
@@ -31,12 +31,12 @@ struct HourlyForecastView: View {
         let precipitation = WeatherPresentation.metric(hour.precipitationProbability, unit: WeatherFormat.percent)
         return VStack(spacing: 0) {
             Text(verbatim: hour.time.clock)
-                .journalFont(size: WeatherStyle.FontSize.caption, relativeTo: .caption)
-                .foregroundColor(WeatherStyle.Color.hourTime)
-            WeatherArt(name: condition.art, size: WeatherStyle.hourIcon)
-                .padding(.top, WeatherStyle.hourIconTop).padding(.bottom, WeatherStyle.hourIconBottom)
+                .appFont(.caption)
+                .foregroundColor(AppColor.textSecondary)
+            WeatherArt(name: condition.art, size: 28)
+                .padding(.top, AppSpacing.small).padding(.bottom, AppSpacing.xSmall)
             Text(verbatim: WeatherPresentation.degrees(hour.temperature))
-                .journalFont(size: WeatherStyle.FontSize.hourTemperature, weight: .medium, relativeTo: .title3)
+                .appFont(.large, weight: .medium)
         }
         .frame(maxWidth: .infinity).monospacedDigit()
         .accessibilityElement(children: .ignore)
@@ -49,14 +49,14 @@ struct HourlyForecastView: View {
 
     private var precipitationLabel: some View {
         VStack(alignment: .leading, spacing: 0) {
-            Divider().overlay(WeatherStyle.Color.precipitationLine)
-            HStack(spacing: JournalStyle.Space.small) {
-                WeatherArt(name: WeatherAsset.humidity, size: WeatherStyle.precipitationIcon)
+            Divider().overlay(AppColor.border)
+            HStack(spacing: AppSpacing.xSmall) {
+                WeatherArt(name: WeatherAsset.humidity, size: 16)
                 Text(WeatherText.precipitation.value)
-                    .journalFont(size: WeatherStyle.FontSize.caption, relativeTo: .caption)
-                    .foregroundColor(JournalStyle.Color.secondary)
+                    .appFont(.caption)
+                    .foregroundColor(AppColor.textSecondary)
             }
-            .padding(.top, JournalStyle.Space.row).padding(.bottom, JournalStyle.Space.related)
+            .padding(.top, AppSpacing.medium).padding(.bottom, AppSpacing.small)
         }
         .accessibilityHidden(true)
     }
@@ -68,8 +68,8 @@ struct HourlyForecastView: View {
                     verbatim: WeatherPresentation.metric(
                         hours[index].precipitationProbability, unit: WeatherFormat.percent)
                 )
-                .journalFont(size: WeatherStyle.FontSize.precipitation, relativeTo: .footnote)
-                .foregroundColor(JournalStyle.Color.accent).monospacedDigit()
+                .appFont(.small)
+                .foregroundColor(AppColor.accent).monospacedDigit()
                 .frame(maxWidth: .infinity)
             }
         }
@@ -91,6 +91,8 @@ private struct TemperatureTrend: View {
 
     private func draw(_ points: [CGPoint], context: GraphicsContext, size: CGSize) {
         guard let first = points.first, let last = points.last else { return }
+        let lineColor = Color(red: 91 / 255, green: 144 / 255, blue: 170 / 255)
+        let fillColor = Color(red: 146 / 255, green: 184 / 255, blue: 206 / 255)
         var line = Path()
         line.addLines(points)
         if points.count > 1 {
@@ -102,20 +104,20 @@ private struct TemperatureTrend: View {
             context.fill(
                 area,
                 with: .linearGradient(
-                    WeatherStyle.trendGradient, startPoint: .zero,
+                    Gradient(colors: [fillColor.opacity(0.48), fillColor.opacity(0.03)]), startPoint: .zero,
                     endPoint: CGPoint(x: 0, y: size.height)))
             context.stroke(
-                line, with: .color(WeatherStyle.Color.trend),
-                style: StrokeStyle(lineWidth: WeatherStyle.lineWidth, lineJoin: .round))
+                line, with: .color(lineColor),
+                style: StrokeStyle(lineWidth: 2, lineJoin: .round))
         }
         for point in points {
             let circle = Path(
                 ellipseIn: CGRect(
-                    x: point.x - WeatherStyle.pointRadius,
-                    y: point.y - WeatherStyle.pointRadius,
-                    width: WeatherStyle.pointRadius * 2, height: WeatherStyle.pointRadius * 2))
-            context.fill(circle, with: .color(JournalStyle.Color.surface))
-            context.stroke(circle, with: .color(WeatherStyle.Color.trend), lineWidth: JournalStyle.Space.hairline)
+                    x: point.x - 2.5,
+                    y: point.y - 2.5,
+                    width: 2.5 * 2, height: 2.5 * 2))
+            context.fill(circle, with: .color(AppColor.surface))
+            context.stroke(circle, with: .color(lineColor), lineWidth: 1)
         }
     }
 
@@ -133,12 +135,12 @@ private struct TemperatureTrend: View {
                 current = []
                 continue
             }
-            let fraction = high > low ? min(1, max(0, (value - low) / (high - low))) : Double(WeatherStyle.cellCenter)
+            let fraction = high > low ? min(1, max(0, (value - low) / (high - low))) : Double(0.5)
             current.append(
                 CGPoint(
-                    x: (CGFloat(index) + WeatherStyle.cellCenter) * size.width / CGFloat(hours.count),
-                    y: size.height - WeatherStyle.trendBottomInset - CGFloat(fraction)
-                        * (size.height - WeatherStyle.trendTopInset - WeatherStyle.trendBottomInset)))
+                    x: (CGFloat(index) + 0.5) * size.width / CGFloat(hours.count),
+                    y: size.height - 8 - CGFloat(fraction)
+                        * (size.height - 8 - 8)))
         }
         if !current.isEmpty { result.append(current) }
         return result
@@ -153,7 +155,7 @@ private struct TemperatureTrend: View {
                 hours: WeatherPreviewData.hours, minimum: WeatherPreviewData.day.low,
                 maximum: WeatherPreviewData.day.high
             )
-            .padding(JournalStyle.Space.card).frame(width: JournalPreview.contentWidth)
+            .padding(AppSpacing.medium).frame(width: JournalPreview.contentWidth)
             .journalPreview().previewLayout(.sizeThatFits).previewDisplayName("逐小时 · 含缺失指标")
         }
     }

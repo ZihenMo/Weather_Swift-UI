@@ -4,7 +4,7 @@ import SwiftUI
 struct WeatherCard: View {
     @Environment(\.locale) private var locale
     @Environment(\.dynamicTypeSize) private var dynamicTypeSize
-    @ScaledMetric(relativeTo: .largeTitle) private var temperatureSize = WeatherStyle.temperatureSize
+    @ScaledMetric(relativeTo: .largeTitle) private var temperatureSize: CGFloat = 65
 
     let name: String
     let region: String
@@ -24,44 +24,44 @@ struct WeatherCard: View {
         VStack(alignment: .leading, spacing: 0) {
             placeHeading
             Text(verbatim: name)
-                .journalFont(size: WeatherStyle.FontSize.place, weight: .bold, relativeTo: .largeTitle)
-                .tracking(WeatherStyle.heroNameTracking).padding(.top, JournalStyle.Space.label)
+                .appFont(.pageTitle, weight: .semibold)
+                .padding(.top, AppSpacing.xSmall)
             Text(verbatim: WeatherPresentation.degrees(forecast.temperature))
-                .journalFont(size: WeatherStyle.temperatureSize, weight: .light, relativeTo: .largeTitle)
-                .tracking(temperatureSize * WeatherStyle.temperatureTrackingRatio)
-                .padding(.top, JournalStyle.Space.hairline).padding(.bottom, WeatherStyle.conditionBottom)
+                .font(.system(size: temperatureSize, weight: .light))
+                .tracking(temperatureSize * -0.07)
+                .padding(.bottom, AppSpacing.small)
             conditionSummary
         }
-        .foregroundColor(JournalStyle.Color.onAccent)
-        .padding(.horizontal, JournalStyle.Space.prominent)
-        .padding(.vertical, WeatherStyle.heroVerticalPadding)
+        .foregroundColor(AppColor.textOnAccent)
+        .padding(.horizontal, 20)
+        .padding(.vertical, AppSpacing.large)
         .frame(
-            maxWidth: .infinity, minHeight: isPreview ? WeatherStyle.previewHeroHeight : WeatherStyle.heroHeight,
+            maxWidth: .infinity, minHeight: isPreview ? 180 : 205,
             alignment: .leading
         )
         .background { artwork }
-        .clipShape(RoundedRectangle(cornerRadius: JournalStyle.Radius.hero, style: .continuous))
+        .clipShape(RoundedRectangle(cornerRadius: AppRadius.large, style: .continuous))
         .accessibilityElement(children: .combine)
     }
 
     private var placeHeading: some View {
-        HStack(spacing: JournalStyle.Space.small) {
+        HStack(spacing: AppSpacing.xSmall) {
             if isDevice {
-                JournalIcon(name: JournalAsset.location, size: WeatherStyle.locationIcon)
+                AppIcon(name: .location, size: .small)
             }
             Text(verbatim: region + dateSuffix)
         }
-        .journalFont(size: WeatherStyle.FontSize.caption, relativeTo: .caption)
+        .appFont(.caption)
     }
 
     @ViewBuilder private var conditionSummary: some View {
         if dynamicTypeSize.isAccessibilitySize {
-            VStack(alignment: .leading, spacing: JournalStyle.Space.related) {
+            VStack(alignment: .leading, spacing: AppSpacing.small) {
                 conditionLabel
                 extremes
             }
         } else {
-            HStack(spacing: WeatherStyle.heroFootSpacing) {
+            HStack(spacing: AppSpacing.medium) {
                 conditionLabel
                 extremes
             }
@@ -70,10 +70,10 @@ struct WeatherCard: View {
 
     private var conditionLabel: some View {
         let condition = WeatherPresentation.condition(forecast.code, daylight: forecast.daylight)
-        return HStack(spacing: JournalStyle.Space.small) {
-            WeatherArt(name: condition.art, size: WeatherStyle.conditionIcon)
+        return HStack(spacing: AppSpacing.xSmall) {
+            WeatherArt(name: condition.art, size: 24)
             Text(condition.label.value)
-                .journalFont(size: WeatherStyle.FontSize.body, weight: .semibold, relativeTo: .body)
+                .appFont(.medium, weight: .semibold)
         }
     }
 
@@ -81,15 +81,25 @@ struct WeatherCard: View {
         let high = WeatherText.highValue.format(WeatherPresentation.degrees(forecast.days.first?.high))
         let low = WeatherText.lowValue.format(WeatherPresentation.degrees(forecast.days.first?.low))
         return Text(verbatim: high + WeatherFormat.extremesSeparator + low)
-            .journalFont(size: WeatherStyle.FontSize.caption, relativeTo: .caption).monospacedDigit()
+            .appFont(.caption).monospacedDigit()
     }
 
     private var artwork: some View {
         GeometryReader { frame in
             Image(decorative: WeatherAsset.harbour).resizable().scaledToFill()
                 .frame(width: frame.size.width, height: frame.size.height).clipped()
-                .background(JournalStyle.Color.sky)
-                .overlay(LinearGradient(gradient: WeatherStyle.heroGradient, startPoint: .leading, endPoint: .trailing))
+                .background(Color(red: 76 / 255, green: 129 / 255, blue: 158 / 255))
+                .overlay {
+                    LinearGradient(
+                        gradient: Gradient(stops: [
+                            .init(
+                                color: Color(red: 29 / 255, green: 66 / 255, blue: 93 / 255).opacity(0.82), location: 0),
+                            .init(
+                                color: Color(red: 30 / 255, green: 69 / 255, blue: 95 / 255).opacity(0.33),
+                                location: 0.48),
+                            .init(color: .clear, location: 0.8),
+                        ]), startPoint: .leading, endPoint: .trailing)
+                }
         }
     }
 
@@ -103,7 +113,7 @@ struct WeatherCard: View {
 struct ForecastWeek: View {
     @Environment(\.locale) private var locale
     @Environment(\.dynamicTypeSize) private var dynamicTypeSize
-    @ScaledMetric(relativeTo: .body) private var rowHeight = WeatherStyle.dayRowHeight
+    @ScaledMetric(relativeTo: .body) private var rowHeight: CGFloat = 48
 
     let days: [DailyForecast]
     let today: String?
@@ -116,20 +126,22 @@ struct ForecastWeek: View {
     }
 
     var body: some View {
-        VStack(spacing: 0) {
-            ForEach(days) { day in
-                dayRow(day)
-                if day.id != days.last?.id { Divider().overlay(WeatherStyle.Color.forecastLine) }
+        AppCard {
+            VStack(spacing: 0) {
+                ForEach(days) { day in
+                    dayRow(day)
+                    if day.id != days.last?.id { Divider().overlay(AppColor.border) }
+                }
             }
+            .padding(.horizontal, AppSpacing.medium)
         }
-        .padding(.horizontal, JournalStyle.Space.card).journalCard()
     }
 
     private func dayRow(_ day: DailyForecast) -> some View {
         Button {
             select(day)
         } label: {
-            rowContent(day).monospacedDigit().foregroundColor(JournalStyle.Color.ink)
+            rowContent(day).monospacedDigit().foregroundColor(AppColor.textPrimary)
                 .contentShape(Rectangle())
         }
         .buttonStyle(.plain).accessibilityIdentifier(WeatherIdentifier.day(day.date))
@@ -137,39 +149,36 @@ struct ForecastWeek: View {
 
     @ViewBuilder private func rowContent(_ day: DailyForecast) -> some View {
         if dynamicTypeSize.isAccessibilitySize {
-            VStack(alignment: .leading, spacing: JournalStyle.Space.item) {
+            VStack(alignment: .leading, spacing: AppSpacing.small) {
                 dateLabel(day)
                 condition(day)
                 temperatureRange(day)
             }
-            .padding(.vertical, JournalStyle.Space.row)
+            .padding(.vertical, AppSpacing.medium)
         } else {
             GeometryReader { frame in standardRow(day, width: frame.size.width) }.frame(height: rowHeight)
         }
     }
 
     private func standardRow(_ day: DailyForecast, width: CGFloat) -> some View {
-        let available =
-            width - WeatherStyle.chevronWidth - WeatherStyle.forecastColumnGap * WeatherStyle.forecastGapCount
-        let unit =
-            available
-            / (WeatherStyle.dateColumnRatio + WeatherStyle.conditionColumnRatio
-                + WeatherStyle.temperatureColumnRatio)
-        return HStack(spacing: WeatherStyle.forecastColumnGap) {
-            dateLabel(day).lineLimit(1).minimumScaleFactor(WeatherStyle.minimumLabelScale).frame(
-                width: unit * WeatherStyle.dateColumnRatio, alignment: .leading)
-            condition(day).lineLimit(1).minimumScaleFactor(WeatherStyle.minimumLabelScale).frame(
-                width: unit * WeatherStyle.conditionColumnRatio, alignment: .leading)
-            temperatureRange(day).lineLimit(1).minimumScaleFactor(WeatherStyle.minimumLabelScale).frame(
-                width: unit * WeatherStyle.temperatureColumnRatio, alignment: .trailing)
-            JournalIcon(name: JournalAsset.forward, size: WeatherStyle.FontSize.caption)
-                .foregroundColor(JournalStyle.Color.secondary).frame(width: WeatherStyle.chevronWidth)
+        let gap = AppSpacing.xSmall
+        let available = max(0, width - 16 - gap * 3)
+        let unit = available / (1.08 + 0.85 + 1.1)
+        return HStack(spacing: gap) {
+            dateLabel(day).lineLimit(1).minimumScaleFactor(0.8).frame(
+                width: unit * 1.08, alignment: .leading)
+            condition(day).lineLimit(1).minimumScaleFactor(0.8).frame(
+                width: unit * 0.85, alignment: .leading)
+            temperatureRange(day).lineLimit(1).minimumScaleFactor(0.8).frame(
+                width: unit * 1.1, alignment: .trailing)
+            AppIcon(name: .forward, size: .small)
+                .foregroundColor(AppColor.textSecondary).frame(width: 16)
         }
         .frame(height: rowHeight)
     }
 
     private func dateLabel(_ day: DailyForecast) -> some View {
-        HStack(alignment: .firstTextBaseline, spacing: JournalStyle.Space.small) {
+        HStack(alignment: .firstTextBaseline, spacing: AppSpacing.xSmall) {
             Group {
                 if day.date == today {
                     Text(WeatherText.today.value)
@@ -177,23 +186,23 @@ struct ForecastWeek: View {
                     Text(verbatim: WeatherPresentation.weekday(day.date, locale: locale))
                 }
             }
-            .journalFont(size: WeatherStyle.FontSize.body, weight: .semibold, relativeTo: .body)
+            .appFont(.medium, weight: .semibold)
             Text(verbatim: WeatherPresentation.shortDate(day.date, locale: locale))
-                .journalFont(size: WeatherStyle.FontSize.date, relativeTo: .caption2)
-                .foregroundColor(JournalStyle.Color.secondary)
+                .appFont(.caption)
+                .foregroundColor(AppColor.textSecondary)
         }
     }
 
     private func condition(_ day: DailyForecast) -> some View {
         let condition = WeatherPresentation.condition(day.code, daylight: .day)
-        return HStack(spacing: JournalStyle.Space.label) {
-            WeatherArt(name: condition.art, size: WeatherStyle.dayIcon)
-            Text(condition.label.value).journalFont(size: WeatherStyle.FontSize.caption, relativeTo: .caption)
+        return HStack(spacing: AppSpacing.xSmall) {
+            WeatherArt(name: condition.art, size: 28)
+            Text(condition.label.value).appFont(.caption)
         }
     }
 
     private func temperatureRange(_ day: DailyForecast) -> some View {
-        HStack(spacing: JournalStyle.Space.label) {
+        HStack(spacing: AppSpacing.xSmall) {
             Text(verbatim: WeatherPresentation.degrees(day.low))
                 .accessibilityLabel(Text(verbatim: WeatherText.lowValue.format(WeatherPresentation.degrees(day.low))))
             if let low = day.low, let high = day.high, let lowest, let highest, highest > lowest {
@@ -202,7 +211,7 @@ struct ForecastWeek: View {
             Text(verbatim: WeatherPresentation.degrees(day.high))
                 .accessibilityLabel(Text(verbatim: WeatherText.highValue.format(WeatherPresentation.degrees(day.high))))
         }
-        .journalFont(size: WeatherStyle.FontSize.temperatureRange, relativeTo: .footnote)
+        .appFont(.small)
     }
 
     private var lowest: Double? { days.compactMap(\.low).min() }
@@ -216,28 +225,33 @@ private struct TemperatureRange: View {
         GeometryReader { frame in
             let start = CGFloat((low - minimum) / (maximum - minimum)) * frame.size.width
             let span = CGFloat((high - low) / (maximum - minimum)) * frame.size.width
-            Capsule().fill(WeatherStyle.Color.track)
+            Capsule().fill(AppColor.fill)
                 .overlay(alignment: .leading) {
                     Capsule().fill(
                         LinearGradient(
-                            colors: [WeatherStyle.Color.rangeCool, WeatherStyle.Color.rangeWarm],
+                            colors: [
+                                Color(red: 115 / 255, green: 175 / 255, blue: 191 / 255),
+                                Color(red: 240 / 255, green: 189 / 255, blue: 105 / 255),
+                            ],
                             startPoint: .leading, endPoint: .trailing)
                     )
-                    .frame(width: max(WeatherStyle.minimumRangeWidth, span)).offset(x: start)
+                    .frame(width: max(2, span)).offset(x: start)
                 }
                 .clipShape(Capsule())
         }
-        .frame(width: WeatherStyle.rangeWidth, height: WeatherStyle.rangeHeight).accessibilityHidden(true)
+        .frame(width: 37, height: 4).accessibilityHidden(true)
     }
 }
 
 /// 当前天气指标按辅助功能字号切换列数，保持标题和值的朗读关系。
 struct WeatherMetrics: View {
     @Environment(\.dynamicTypeSize) private var dynamicTypeSize
+    @ScaledMetric(relativeTo: .title2) private var metricSize: CGFloat = 23
+
     let forecast: Forecast
 
     var body: some View {
-        LazyVGrid(columns: columns, alignment: .leading, spacing: JournalStyle.Space.item) {
+        LazyVGrid(columns: columns, alignment: .leading, spacing: AppSpacing.small) {
             metric(
                 WeatherText.feelsLike.value, art: WeatherAsset.thermometer,
                 value: WeatherPresentation.degrees(forecast.feelsLike))
@@ -254,24 +268,24 @@ struct WeatherMetrics: View {
     }
 
     private func metric(_ title: LocalizedStringKey, art: String, value: String) -> some View {
-        VStack(alignment: .leading, spacing: 0) {
-            HStack(spacing: JournalStyle.Space.small) {
-                WeatherArt(name: art, size: WeatherStyle.metricIcon)
-                Text(title).journalFont(size: WeatherStyle.FontSize.caption, relativeTo: .caption)
-                    .foregroundColor(JournalStyle.Color.secondary)
+        AppCard {
+            VStack(alignment: .leading, spacing: 0) {
+                HStack(spacing: AppSpacing.xSmall) {
+                    WeatherArt(name: art, size: 16)
+                    Text(title).appFont(.caption)
+                        .foregroundColor(AppColor.textSecondary)
+                }
+                Text(verbatim: value).font(.system(size: metricSize, weight: .medium)).monospacedDigit()
             }
-            Text(verbatim: value).journalFont(size: WeatherStyle.FontSize.metric, weight: .medium, relativeTo: .title2)
-                .monospacedDigit()
+            .padding(AppSpacing.medium).frame(maxWidth: .infinity, alignment: .leading)
         }
-        .padding(JournalStyle.Space.card).frame(maxWidth: .infinity, alignment: .leading)
-        .background(JournalStyle.Color.surface, in: RoundedRectangle(cornerRadius: WeatherStyle.metricRadius))
         .accessibilityElement(children: .combine)
     }
 
     private var columns: [GridItem] {
         dynamicTypeSize.isAccessibilitySize
             ? [GridItem(.flexible())]
-            : [GridItem(.flexible(), spacing: JournalStyle.Space.item), GridItem(.flexible())]
+            : [GridItem(.flexible(), spacing: AppSpacing.small), GridItem(.flexible())]
     }
 }
 
@@ -292,7 +306,7 @@ struct WeatherMetrics: View {
                 WeatherMetrics(forecast: WeatherPreviewData.forecast)
                     .environment(\.dynamicTypeSize, .accessibility3).previewDisplayName("天气指标 · 大字号")
             }
-            .padding(JournalStyle.Space.page).frame(width: JournalPreview.contentWidth)
+            .padding(AppSpacing.large).frame(width: JournalPreview.contentWidth)
             .journalPreview().previewLayout(.sizeThatFits)
         }
     }

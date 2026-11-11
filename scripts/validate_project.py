@@ -67,6 +67,11 @@ for language, values in localizations.items():
     for key in set(base) & set(values):
         if re.findall(r'%(?:\d+\$)?[@df]', base[key]) != re.findall(r'%(?:\d+\$)?[@df]', values[key]):
             errors.append(f'{language}: format placeholders differ for {key}')
+color_source = (ROOT / 'WeatherJournal/Shared/UI/AppColor.swift').read_text()
+shared_colors = {
+    re.sub(r'\s+', '', value): name
+    for name, value in re.findall(r'static let (\w+) = (Color\(red:[^)]*\))', color_source)
+}
 for path in (ROOT / 'WeatherJournal').rglob('*.swift'):
     source = path.read_text()
     for key in re.findall(r'LocalizedText\(key: "([^"\n]+)"\)', source):
@@ -74,10 +79,30 @@ for path in (ROOT / 'WeatherJournal').rglob('*.swift'):
             errors.append(f'{path.relative_to(ROOT)}: missing localization {key}')
     if '/Configuration/' not in str(path) and 'https://' in source:
         errors.append(f'{path.relative_to(ROOT)}: hardcoded service URL')
-    if '/UI/' in str(path) and path.name != 'JournalStyle.swift':
-        for pattern in [r'Color\(red:', r'\.font\(\.system', r'\.padding\(\d', r'cornerRadius:\s*\d']:
-            if re.search(pattern, source):
-                errors.append(f'{path.relative_to(ROOT)}: inline style constant ({pattern})')
+    if re.search(r'\b(?:JournalStyle|PlacesStyle|WeatherStyle)\b|\.journalFont\(', source):
+        errors.append(f'{path.relative_to(ROOT)}: obsolete module style configuration')
+    if '/UI/' in str(path):
+        # 局部布局和业务专属色允许就近表达；共用字体与颜色仍走 Shared/UI。
+        scaled = set(re.findall(r'@ScaledMetric(?:\([^\n]*\))?\s+(?:private\s+)?var\s+(\w+)', source))
+        if re.search(r'@ScaledMetric(?:\([^\n]*\))?\s+(?:private\s+)?var\s+\w+\s*=\s*\d+\s*$', source, re.M):
+            errors.append(f'{path.relative_to(ROOT)}: declare CGFloat for integral ScaledMetric defaults')
+        for size in re.findall(r'\.font\(\.system\(size:\s*([^,)]+)', source):
+            if size.strip() not in scaled:
+                errors.append(f'{path.relative_to(ROOT)}: custom font must use a local ScaledMetric')
+        if re.search(r'\.font\(\.(?:body|headline|subheadline|caption|caption2|footnote|callout|title|title2|title3|largeTitle)\b', source):
+            errors.append(f'{path.relative_to(ROOT)}: use the shared AppFont scale')
+        if path.name != 'AppColor.swift':
+            for value in re.findall(r'Color\(red:[^)]*\)', source):
+                key = re.sub(r'\s+', '', value)
+                if key in shared_colors:
+                    errors.append(f'{path.relative_to(ROOT)}: duplicate semantic color; use AppColor.{shared_colors[key]}')
+    if '/Shared/UI/' in str(path) and re.search(
+        r'\b(?:WeatherViewModel|Forecast|WeatherCard|Place|PlacesRepository|AppDependencies)\b', source
+    ):
+        errors.append(f'{path.relative_to(ROOT)}: Shared/UI must not depend on business types')
+    if any(part in {'Data', 'Services'} for part in path.relative_to(ROOT / 'WeatherJournal').parts):
+        if re.search(r'import SwiftUI|\b(?:AppFont|AppColor|AppSpacing|AppRadius|AppCard|AppNotice|AppPanel)\b', source):
+            errors.append(f'{path.relative_to(ROOT)}: data and services must not depend on UI')
 for path in resources.rglob('Contents.json'):
     document = json.loads(path.read_text())
     for item in document.get('images', []):

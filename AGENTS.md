@@ -10,7 +10,7 @@ weather_swiftui/
 │   │   └── PreviewSupport/          跨模块预览装配，仅用于 DEBUG
 │   ├── Modules/
 │   │   ├── Weather/                 当前天气、预报与快照缓存
-│   │   │   ├── Configuration/       模块策略、接口常量、样式和资源入口
+│   │   │   ├── Configuration/       模块策略、接口常量、展示格式和资源入口
 │   │   │   ├── UI/                  页面、展示模型和天气组件
 │   │   │   ├── Data/                领域模型、数据映射和仓库
 │   │   │   ├── Services/            天气接口与快照存储
@@ -22,7 +22,7 @@ weather_swiftui/
 │   │       ├── Services/            系统定位、搜索接口与收藏存储
 │   │       └── PreviewSupport/      地点样本与内存依赖，仅用于 DEBUG
 │   ├── Shared/
-│   │   ├── UI/                     语义样式与跨模块组件
+│   │   ├── UI/                     共用 UI 规范与通用组件
 │   │   ├── Network/                网络传输与错误契约
 │   │   ├── Storage/                可替换的文件操作
 │   │   ├── Location/               共用坐标与定位错误

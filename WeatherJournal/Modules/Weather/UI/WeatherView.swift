@@ -19,7 +19,7 @@ struct WeatherView: View {
             ScrollView { content }
                 .onChange(of: model.target) { _ in scroll.scrollTo(WeatherIdentifier.top, anchor: .top) }
         }
-        .background((isPreview ? JournalStyle.Color.panel : JournalStyle.Color.background).ignoresSafeArea())
+        .background((isPreview ? AppColor.surfaceRaised : AppColor.background).ignoresSafeArea())
         .onAppear(perform: appear)
         .onDisappear(perform: disappear)
         .onChange(of: language) { if isVisible, scenePhase == .active { model.startAutomaticUpdates(language: $0) } }
@@ -30,15 +30,15 @@ struct WeatherView: View {
 
     private var content: some View {
         VStack(alignment: .leading, spacing: 0) {
-            JournalStyle.Color.transparent.frame(height: 0).id(WeatherIdentifier.top)
+            Color.clear.frame(height: 0).id(WeatherIdentifier.top)
             if let forecast = model.forecast {
                 forecastContent(forecast)
             } else {
                 status
             }
         }
-        .padding(.horizontal, JournalStyle.Space.page)
-        .padding(.bottom, JournalStyle.Space.prominent)
+        .padding(.horizontal, AppSpacing.large)
+        .padding(.bottom, AppSpacing.large)
         .frame(maxWidth: .infinity, alignment: .leading)
     }
 
@@ -51,65 +51,66 @@ struct WeatherView: View {
             updateStatus
         }
         if let openDay {
-            SectionHeading(WeatherText.week.value, icon: JournalAsset.calendar)
-                .padding(.top, WeatherStyle.sectionTop).padding(.bottom, WeatherStyle.sectionBottom)
+            AppSectionTitle(WeatherText.week.value, icon: .calendar)
+                .padding(.top, AppSpacing.large).padding(.bottom, AppSpacing.small)
             ForecastWeek(days: forecast.days, today: forecast.time?.date) { openDay(displayName, forecast, $0) }
         }
         if !isPreview {
-            SectionHeading(WeatherText.details.value)
-                .padding(.top, WeatherStyle.sectionTop).padding(.bottom, WeatherStyle.sectionBottom)
+            AppSectionTitle(WeatherText.details.value)
+                .padding(.top, AppSpacing.large).padding(.bottom, AppSpacing.small)
         }
         WeatherMetrics(forecast: forecast)
-            .padding(.top, isPreview ? JournalStyle.Space.card : 0)
+            .padding(.top, isPreview ? AppSpacing.medium : 0)
         Link(WeatherText.attribution.value, destination: attributionURL)
-            .font(JournalStyle.Font.caption)
-            .padding(.top, JournalStyle.Space.card)
+            .appFont(.caption)
+            .foregroundColor(AppColor.accent)
+            .padding(.top, AppSpacing.medium)
+            .frame(minHeight: 44)
     }
 
     @ViewBuilder private func updateInformation(_ forecast: Forecast) -> some View {
         if let time = forecast.time {
             Text(verbatim: WeatherText.asOf.format(time.clock))
-                .font(JournalStyle.Font.caption)
-                .foregroundColor(JournalStyle.Color.secondary)
+                .appFont(.caption)
+                .foregroundColor(AppColor.textSecondary)
                 .monospacedDigit()
         }
     }
 
     @ViewBuilder private var updateStatus: some View {
         if case .failed = model.phase {
-            Text(WeatherText.updateFailed.value).font(JournalStyle.Font.note)
-                .padding(JournalStyle.Space.page).frame(maxWidth: .infinity, alignment: .leading)
-                .background(JournalStyle.Color.warning, in: RoundedRectangle(cornerRadius: JournalStyle.Radius.status))
+            AppNotice(WeatherText.updateFailed.value)
         }
     }
 
     private var status: some View {
-        VStack(spacing: JournalStyle.Space.item) {
-            Text(WeatherText.title.value)
-                .journalFont(size: JournalStyle.Size.caption, relativeTo: .caption)
-                .foregroundColor(JournalStyle.Color.secondary)
-            Text(statusTitle.value)
-                .journalFont(size: JournalStyle.Size.statusTitle, weight: .bold, relativeTo: .title2)
-            Text(statusExplanation.value)
-                .journalFont(size: JournalStyle.Size.body)
-                .foregroundColor(JournalStyle.Color.secondary)
-                .padding(.bottom, JournalStyle.Space.row)
-            statusActions
+        AppCard {
+            VStack(spacing: AppSpacing.small) {
+                Text(WeatherText.title.value)
+                    .appFont(.caption)
+                    .foregroundColor(AppColor.textSecondary)
+                Text(statusTitle.value)
+                    .appFont(.title, weight: .semibold)
+                Text(statusExplanation.value)
+                    .appFont(.medium)
+                    .foregroundColor(AppColor.textSecondary)
+                    .padding(.bottom, AppSpacing.large)
+                statusActions
+            }
+            .multilineTextAlignment(.center)
+            .padding(.vertical, 48).padding(.horizontal, AppSpacing.medium)
+            .frame(maxWidth: .infinity)
         }
-        .multilineTextAlignment(.center)
-        .padding(.vertical, JournalStyle.Size.statusPadding).padding(.horizontal, JournalStyle.Space.card)
-        .frame(maxWidth: .infinity)
-        .background(JournalStyle.Color.surface, in: RoundedRectangle(cornerRadius: JournalStyle.Radius.status))
     }
 
     @ViewBuilder private var statusActions: some View {
         if typeSize.isAccessibilitySize {
-            VStack(spacing: JournalStyle.Space.item) {
+            VStack(spacing: AppSpacing.small) {
                 recoveryAction
                 chooseRegionAction
             }
         } else {
-            HStack(spacing: JournalStyle.Space.item) {
+            HStack(spacing: AppSpacing.small) {
                 recoveryAction
                 chooseRegionAction
             }
@@ -118,28 +119,25 @@ struct WeatherView: View {
 
     @ViewBuilder private var chooseRegionAction: some View {
         if let openPlaces, model.phase != .loading {
-            Button(action: openPlaces) {
-                Text(CommonText.choosePlace.value).journalAction(primary: model.phase == .failed(.denied))
-            }
-            .buttonStyle(.plain)
+            Button(CommonText.choosePlace.value, action: openPlaces)
+                .buttonStyle(AppButtonStyle(model.phase == .failed(.denied) ? .primary : .secondary))
         }
     }
 
     @ViewBuilder private var recoveryAction: some View {
         switch model.phase {
         case .awaitingPermission:
-            Button(action: model.refresh) { Text(WeatherText.refresh.value).journalAction() }.buttonStyle(.plain)
+            Button(WeatherText.refresh.value, action: model.refresh).buttonStyle(AppButtonStyle(.secondary))
         case .failed(.denied):
             if let requestLocationSettings {
-                Button(action: requestLocationSettings) { Text(WeatherText.openSettings.value).journalAction() }
-                    .buttonStyle(.plain)
+                Button(WeatherText.openSettings.value, action: requestLocationSettings)
+                    .buttonStyle(AppButtonStyle(.secondary))
             }
         case .failed(let failure):
             Button(action: model.refresh) {
                 Text(failure == .unavailable ? WeatherText.retryLocation.value : CommonText.retry.value)
-                    .journalAction(primary: failure == .forecast)
             }
-            .buttonStyle(.plain)
+            .buttonStyle(AppButtonStyle(failure == .forecast ? .primary : .secondary))
         default: EmptyView()
         }
     }

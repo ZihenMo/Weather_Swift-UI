@@ -3,6 +3,7 @@ import SwiftUI
 /// 收藏列表观察仓库的长期状态，选择与定位摘要由 App 注入，编辑状态归页面所有。
 struct PlacesView: View {
     @Environment(\.dismiss) private var dismiss
+    @Environment(\.dynamicTypeSize) private var typeSize
     @ObservedObject var repository: PlacesRepository
     @State private var editing = false
     @State private var removing = false
@@ -35,16 +36,16 @@ struct PlacesView: View {
                 searchButton
                 PlacesPersistenceNotice(repository: repository, allowsRebuild: true)
                 Text(PlacesText.location.value)
-                    .journalFont(size: PlacesStyle.noteSize, relativeTo: .caption)
-                    .foregroundColor(JournalStyle.Color.secondary)
+                    .appFont(.caption)
+                    .foregroundColor(AppColor.textSecondary)
                 currentLocationButton
                 savedHeading
                 savedContent
             }
-            .padding(.horizontal, JournalStyle.Space.page)
-            .padding(.bottom, JournalStyle.Space.page)
+            .padding(.horizontal, AppSpacing.large)
+            .padding(.bottom, AppSpacing.large)
         }
-        .background(JournalStyle.Color.background.ignoresSafeArea())
+        .background(AppColor.background.ignoresSafeArea())
         .navigationBarHidden(true)
         .onChange(of: repository.saved.isEmpty) { empty in if empty { editing = false } }
     }
@@ -57,15 +58,15 @@ struct PlacesView: View {
                 Label {
                     Text(PlacesText.backToWeather.value)
                 } icon: {
-                    JournalIcon(name: JournalAsset.back, size: PlacesStyle.backSize)
+                    AppIcon(name: .back, size: .small)
                 }
-                .journalFont(size: PlacesStyle.backSize)
-                .frame(minHeight: PlacesStyle.backHeight)
+                .appFont(.medium)
+                .frame(minHeight: 44)
             }
-            .foregroundColor(JournalStyle.Color.accent)
+            .foregroundColor(AppColor.accent)
             Text(PlacesText.title.value)
-                .journalFont(size: PlacesStyle.titleSize, weight: .bold, relativeTo: .largeTitle)
-                .frame(minHeight: PlacesStyle.titleHeight, alignment: .leading)
+                .appFont(.pageTitle, weight: .semibold)
+                .frame(minHeight: 48, alignment: .leading)
                 .accessibilityAddTraits(.isHeader)
         }
     }
@@ -75,17 +76,17 @@ struct PlacesView: View {
             Label {
                 Text(PlacesText.query.value)
             } icon: {
-                JournalIcon(name: JournalAsset.search, size: PlacesStyle.iconSize)
+                AppIcon(name: .search)
             }
-            .journalFont(size: PlacesStyle.bodySize)
-            .foregroundColor(JournalStyle.Color.secondary)
+            .appFont(.medium)
+            .foregroundColor(AppColor.textSecondary)
             .frame(maxWidth: .infinity, alignment: .leading)
-            .padding(JournalStyle.Space.card)
-            .background(JournalStyle.Color.search, in: RoundedRectangle(cornerRadius: PlacesStyle.searchRadius))
+            .padding(AppSpacing.medium)
+            .background(AppColor.fill, in: RoundedRectangle(cornerRadius: AppRadius.small))
         }
         .buttonStyle(.plain)
-        .padding(.top, JournalStyle.Space.related)
-        .padding(.bottom, PlacesStyle.searchBottom)
+        .padding(.top, AppSpacing.small)
+        .padding(.bottom, AppSpacing.xLarge)
         .accessibilityIdentifier(PlacesIdentifier.search)
     }
 
@@ -93,71 +94,93 @@ struct PlacesView: View {
         Button {
             select(nil)
         } label: {
-            HStack(spacing: JournalStyle.Space.small) {
-                JournalIcon(name: JournalAsset.location, size: PlacesStyle.iconSize)
-                Text(verbatim: deviceName ?? CommonText.currentLocation.string)
-                    .journalFont(size: PlacesStyle.bodySize, weight: isDeviceSelected ? .semibold : .regular)
-                Spacer(minLength: JournalStyle.Space.small)
-                Text(verbatim: deviceStatus ?? (deviceName == nil ? "" : CommonText.currentLocation.string))
-                    .journalFont(size: PlacesStyle.noteSize, relativeTo: .caption)
-                    .foregroundColor(JournalStyle.Color.secondary)
+            AppCard {
+                locationContent
+                    .padding(.horizontal, AppSpacing.medium)
+                    .padding(.vertical, AppSpacing.small)
+                    .frame(minHeight: 48)
             }
-            .foregroundColor(isDeviceSelected ? JournalStyle.Color.accent : JournalStyle.Color.ink)
-            .frame(minHeight: PlacesStyle.rowHeight)
-            .padding(.horizontal, PlacesStyle.rowInset)
-            .padding(.vertical, JournalStyle.Space.tight)
-            .background(JournalStyle.Color.surface, in: RoundedRectangle(cornerRadius: PlacesStyle.groupRadius))
         }
         .buttonStyle(.plain)
-        .padding(.top, PlacesStyle.groupTop)
-        .padding(.bottom, PlacesStyle.groupBottom)
+        .padding(.top, AppSpacing.small)
+        .padding(.bottom, AppSpacing.xLarge)
         .accessibilityIdentifier(PlacesIdentifier.device)
+    }
+
+    @ViewBuilder private var locationContent: some View {
+        if typeSize.isAccessibilitySize {
+            VStack(alignment: .leading, spacing: AppSpacing.xSmall) {
+                locationName
+                locationNote
+            }
+            .frame(maxWidth: .infinity, alignment: .leading)
+        } else {
+            HStack(spacing: AppSpacing.xSmall) {
+                locationName
+                Spacer(minLength: AppSpacing.xSmall)
+                locationNote
+            }
+        }
+    }
+
+    private var locationName: some View {
+        HStack(spacing: AppSpacing.xSmall) {
+            AppIcon(name: .location)
+            Text(verbatim: deviceName ?? CommonText.currentLocation.string)
+                .appFont(.medium, weight: isDeviceSelected ? .semibold : .regular)
+        }
+        .foregroundColor(isDeviceSelected ? AppColor.accent : AppColor.textPrimary)
+    }
+
+    private var locationNote: some View {
+        Text(verbatim: deviceStatus ?? (deviceName == nil ? "" : CommonText.currentLocation.string))
+            .appFont(.caption).foregroundColor(AppColor.textSecondary)
     }
 
     private var savedHeading: some View {
         HStack {
             Text(PlacesText.saved.value)
-                .journalFont(size: PlacesStyle.sectionSize, weight: .semibold)
+                .appFont(.medium, weight: .semibold)
                 .accessibilityAddTraits(.isHeader)
-            Spacer(minLength: JournalStyle.Space.item)
+            Spacer(minLength: AppSpacing.small)
             editButton
         }
     }
 
     @ViewBuilder private var savedContent: some View {
-        VStack(alignment: .leading, spacing: 0) {
-            if repository.saved.isEmpty {
-                Text(PlacesText.empty.value)
-                    .journalFont(size: PlacesStyle.noteSize, relativeTo: .caption)
-                    .foregroundColor(JournalStyle.Color.secondary)
-                    .padding(.vertical, JournalStyle.Space.card)
-                    .frame(maxWidth: .infinity, alignment: .leading)
-            } else {
-                savedRows
+        AppCard {
+            VStack(alignment: .leading, spacing: 0) {
+                if repository.saved.isEmpty {
+                    Text(PlacesText.empty.value)
+                        .appFont(.caption)
+                        .foregroundColor(AppColor.textSecondary)
+                        .padding(.vertical, AppSpacing.medium)
+                        .frame(maxWidth: .infinity, alignment: .leading)
+                } else {
+                    savedRows
+                }
             }
+            .padding(.horizontal, AppSpacing.medium)
         }
-        .padding(.horizontal, PlacesStyle.rowInset)
-        .padding(.vertical, JournalStyle.Space.tight)
-        .background(JournalStyle.Color.surface, in: RoundedRectangle(cornerRadius: PlacesStyle.groupRadius))
-        .padding(.top, PlacesStyle.groupTop)
+        .padding(.top, AppSpacing.small)
     }
 
     private var savedRows: some View {
         ForEach(repository.saved) { place in
             savedRow(place)
-            if place.id != repository.saved.last?.id { Divider().overlay(JournalStyle.Color.line) }
+            if place.id != repository.saved.last?.id { Divider().overlay(AppColor.border) }
         }
     }
 
     private func savedRow(_ place: Place) -> some View {
-        HStack(spacing: JournalStyle.Space.small) {
+        HStack(spacing: AppSpacing.xSmall) {
             Button {
                 select(place)
             } label: {
                 Text(verbatim: place.name)
-                    .journalFont(size: PlacesStyle.bodySize, weight: isSelected(place) ? .semibold : .regular)
-                    .foregroundColor(isSelected(place) ? JournalStyle.Color.accent : JournalStyle.Color.ink)
-                    .frame(maxWidth: .infinity, minHeight: PlacesStyle.rowHeight, alignment: .leading)
+                    .appFont(.medium, weight: isSelected(place) ? .semibold : .regular)
+                    .foregroundColor(isSelected(place) ? AppColor.accent : AppColor.textPrimary)
+                    .frame(maxWidth: .infinity, minHeight: 48, alignment: .leading)
                     .contentShape(Rectangle())
             }
             .buttonStyle(.plain)
@@ -170,9 +193,9 @@ struct PlacesView: View {
         Button(role: .destructive) {
             remove(place)
         } label: {
-            JournalIcon(name: JournalAsset.remove, size: PlacesStyle.iconSize)
-                .foregroundColor(JournalStyle.Color.accent)
-                .frame(width: JournalStyle.Size.touchTarget, height: JournalStyle.Size.touchTarget)
+            AppIcon(name: .remove)
+                .foregroundColor(AppColor.accent)
+                .frame(width: 44, height: 44)
         }
         .accessibilityLabel(Text(verbatim: PlacesText.removeNamed.format(place.name)))
         .disabled(removing)
@@ -185,10 +208,8 @@ struct PlacesView: View {
                 editing.toggle()
             } label: {
                 Text(editing ? PlacesText.done.value : PlacesText.edit.value)
-                    .journalFont(size: PlacesStyle.actionSize)
-                    .frame(minHeight: JournalStyle.Size.touchTarget)
             }
-            .foregroundColor(JournalStyle.Color.accent)
+            .buttonStyle(AppButtonStyle(.plain))
         }
     }
 
@@ -214,25 +235,25 @@ struct PlaceRow: View {
     }
 
     var body: some View {
-        HStack(spacing: JournalStyle.Space.item) {
+        HStack(spacing: AppSpacing.small) {
             VStack(alignment: .leading, spacing: 0) {
-                Text(verbatim: place.name).journalFont(size: PlacesStyle.bodySize)
+                Text(verbatim: place.name).appFont(.medium)
                 if !place.region.isEmpty {
                     Text(verbatim: place.region)
-                        .journalFont(size: PlacesStyle.noteSize, relativeTo: .caption)
-                        .foregroundColor(JournalStyle.Color.secondary)
+                        .appFont(.caption)
+                        .foregroundColor(AppColor.textSecondary)
                 }
             }
-            Spacer(minLength: JournalStyle.Space.item)
+            Spacer(minLength: AppSpacing.small)
             if showsChevron {
                 Text(PlacesText.view.value)
-                    .journalFont(size: PlacesStyle.resultActionSize)
-                    .foregroundColor(JournalStyle.Color.accent)
+                    .appFont(.small)
+                    .foregroundColor(AppColor.accent)
             }
         }
-        .foregroundColor(JournalStyle.Color.ink)
-        .padding(.vertical, JournalStyle.Space.small)
-        .frame(minHeight: PlacesStyle.resultHeight)
+        .foregroundColor(AppColor.textPrimary)
+        .padding(.vertical, AppSpacing.xSmall)
+        .frame(minHeight: 48)
         .contentShape(Rectangle())
     }
 }
@@ -246,7 +267,7 @@ struct PlaceRow: View {
                 scene(.empty).previewDisplayName("地区列表 · 空态")
                 scene(.ready).environment(\.dynamicTypeSize, .accessibility3).previewDisplayName("地区 · 大字号")
                 PlaceRow(place: PlacesPreviewData.city)
-                    .padding(JournalStyle.Space.page).previewLayout(.sizeThatFits).previewDisplayName("地区摘要")
+                    .padding(AppSpacing.large).previewLayout(.sizeThatFits).previewDisplayName("地区摘要")
             }
             .journalPreview()
         }

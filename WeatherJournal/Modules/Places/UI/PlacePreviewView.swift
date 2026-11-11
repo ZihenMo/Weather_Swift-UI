@@ -14,15 +14,15 @@ struct PlacePreviewView<Content: View>: View {
     @ViewBuilder let content: () -> Content
 
     var body: some View {
-        VStack(spacing: JournalStyle.Space.card) {
+        VStack(spacing: AppSpacing.medium) {
             heading
-                .padding(.horizontal, PlacesStyle.panelInset)
+                .padding(.horizontal, AppSpacing.large)
             content()
         }
-        .background(JournalStyle.Color.panel)
+        .background(AppColor.surfaceRaised)
         .background {
             GeometryReader { geometry in
-                JournalStyle.Color.transparent.onAppear { availableWidth = geometry.size.width }
+                Color.clear.onAppear { availableWidth = geometry.size.width }
                     .onChange(of: geometry.size.width) { availableWidth = $0 }
             }
         }
@@ -30,15 +30,15 @@ struct PlacePreviewView<Content: View>: View {
 
     @ViewBuilder private var heading: some View {
         if usesStackedHeading {
-            VStack(spacing: JournalStyle.Space.small) {
+            VStack(spacing: AppSpacing.xSmall) {
                 title
                 actions
             }
         } else {
-            HStack(spacing: JournalStyle.Space.item) {
+            HStack(spacing: AppSpacing.small) {
                 closeButton.frame(minWidth: 0, maxWidth: .infinity, alignment: .leading)
-                title.lineLimit(1).minimumScaleFactor(PlacesStyle.minimumTitleScale)
-                    .layoutPriority(PlacesStyle.titleLayoutPriority)
+                title.lineLimit(1).minimumScaleFactor(0.8)
+                    .layoutPriority(-1)
                     .frame(minWidth: 0, maxWidth: .infinity)
                 addButton.frame(minWidth: 0, maxWidth: .infinity, alignment: .trailing)
             }
@@ -47,53 +47,37 @@ struct PlacePreviewView<Content: View>: View {
 
     private var title: some View {
         Text(PlacesText.preview.value)
-            .journalFont(size: PlacesStyle.previewTitleSize, weight: .semibold)
+            .appFont(.large, weight: .semibold)
             .multilineTextAlignment(.center)
             .accessibilityAddTraits(.isHeader)
     }
 
     private var usesStackedHeading: Bool {
-        dynamicTypeSize >= .xxLarge || availableWidth < PlacesStyle.compactHeadingWidth
+        dynamicTypeSize >= .xxLarge || availableWidth < 350
     }
 
     private var actions: some View {
         HStack {
             closeButton
-            Spacer(minLength: JournalStyle.Space.item)
+            Spacer(minLength: AppSpacing.small)
             addButton
         }
     }
 
     private var closeButton: some View {
-        Button(action: close) {
-            Text(CommonText.close.value)
-                .journalFont(size: PlacesStyle.actionSize)
-                .foregroundColor(JournalStyle.Color.accent)
-                .frame(minWidth: JournalStyle.Size.touchTarget, minHeight: JournalStyle.Size.touchTarget)
-                .fixedSize(horizontal: true, vertical: true)
-                .contentShape(Rectangle())
-        }
-        .buttonStyle(.plain)
-        .disabled(adding)
-        .accessibilityIdentifier(PlacesIdentifier.closePreview)
+        Button(CommonText.close.value, action: close)
+            .buttonStyle(AppButtonStyle(.plain))
+            .fixedSize(horizontal: true, vertical: true)
+            .disabled(adding)
+            .accessibilityIdentifier(PlacesIdentifier.closePreview)
     }
 
     private var addButton: some View {
         Button(action: add) {
             Text(isSaved ? PlacesText.added.value : PlacesText.add.value)
-                .journalFont(size: PlacesStyle.bodySize, weight: .semibold)
-                .foregroundColor(isSaved || adding ? JournalStyle.Color.secondary : JournalStyle.Color.onAccent)
-                .padding(.horizontal, PlacesStyle.addHorizontalInset)
-                .padding(.vertical, PlacesStyle.addVerticalInset)
-                .background(
-                    isSaved || adding ? JournalStyle.Color.search : JournalStyle.Color.accent,
-                    in: RoundedRectangle(cornerRadius: PlacesStyle.addRadius)
-                )
-                .frame(minWidth: JournalStyle.Size.touchTarget, minHeight: JournalStyle.Size.touchTarget)
-                .fixedSize(horizontal: true, vertical: true)
-                .contentShape(Rectangle())
         }
-        .buttonStyle(.plain)
+        .buttonStyle(AppButtonStyle(.primary))
+        .fixedSize(horizontal: true, vertical: true)
         .disabled(adding || isSaved)
         .accessibilityIdentifier(PlacesIdentifier.add)
     }
@@ -120,7 +104,7 @@ struct PlacePreviewView<Content: View>: View {
                 PlacePreviewView(
                     repository: repository, place: PlacesPreviewData.candidate, close: {}, added: { _ in }
                 ) {
-                    PlaceRow(place: PlacesPreviewData.candidate, showsChevron: false).padding(JournalStyle.Space.page)
+                    PlaceRow(place: PlacesPreviewData.candidate, showsChevron: false).padding(AppSpacing.large)
                 }
             }
             .previewDisplayName("候选概览 · 标题与收藏")

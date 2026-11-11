@@ -29,7 +29,7 @@ struct JournalRoot: View {
                 header
                 homeContent
             }
-            .background(JournalStyle.Color.background.ignoresSafeArea())
+            .background(AppColor.background.ignoresSafeArea())
             .navigationBarHidden(true)
             .background { DestinationLink(item: $route, destination: destination) }
         }
@@ -62,24 +62,26 @@ struct JournalRoot: View {
     private var header: some View {
         HStack {
             Text(WeatherText.title.value)
-                .journalFont(size: JournalStyle.Size.pageTitle, weight: .bold, relativeTo: .largeTitle)
+                .appFont(.pageTitle, weight: .semibold)
                 .accessibilityAddTraits(.isHeader)
             Spacer()
             placesButton
         }
-        .foregroundColor(JournalStyle.Color.ink)
-        .frame(minHeight: JournalStyle.Size.navigationHeight)
-        .padding(.horizontal, JournalStyle.Space.page)
+        .foregroundColor(AppColor.textPrimary)
+        .frame(minHeight: 60)
+        .padding(.horizontal, AppSpacing.large)
     }
 
     private var placesButton: some View {
         Button {
             route = .places
         } label: {
-            JournalIcon(name: JournalAsset.places, size: JournalStyle.Size.navigationIcon)
-                .frame(width: JournalStyle.Size.navigationButton, height: JournalStyle.Size.navigationButton)
-                .background(JournalStyle.Color.surface, in: Circle())
+            AppIcon(name: .places)
+                .frame(width: 40, height: 40)
+                .background(AppColor.surface, in: Circle())
+                .frame(width: 44, height: 44).contentShape(Rectangle())
         }
+        .foregroundColor(AppColor.accent)
         .accessibilityLabel(Text(PlacesText.title.value))
         .disabled(!initialized)
         .accessibilityIdentifier(PlacesIdentifier.list)
@@ -193,7 +195,7 @@ private struct SearchFlow: View {
 
     var body: some View {
         ZStack {
-            JournalPanel(close: close) {
+            AppPanel(close: close) {
                 PlaceSearchView(
                     find: dependencies.places.find, delay: dependencies.placesPolicy.searchDelayNanoseconds,
                     sleep: dependencies.sleep, preview: { candidate = $0 }, close: close)
@@ -201,7 +203,7 @@ private struct SearchFlow: View {
             .accessibilityHidden(candidate != nil)
             .allowsHitTesting(candidate == nil)
             if let place = candidate {
-                JournalPanel(close: closeCandidate) {
+                AppPanel(close: closeCandidate, allowsDismiss: !adding) {
                     CandidateScreen(
                         dependencies: dependencies, place: place, close: closeCandidate,
                         added: { _ in finishAdding(place) },

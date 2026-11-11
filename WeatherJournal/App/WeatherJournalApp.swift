@@ -22,12 +22,14 @@ struct WeatherJournalApp: App {
         WindowGroup {
             Group {
                 switch dependencies {
-                case .none: JournalStyle.Color.transparent
+                case .none: Color.clear
                 case .some(.success(let dependencies)): JournalRoot(dependencies: dependencies)
-                case .some(.failure): Text(CommonText.startupFailure.value).padding(JournalStyle.Space.status)
+                case .some(.failure): Text(CommonText.startupFailure.value).padding(AppSpacing.xLarge)
                 }
             }
-            .tint(JournalStyle.Color.accent)
+            .appFont(.medium)
+            .foregroundColor(AppColor.textPrimary)
+            .tint(AppColor.accent)
             .preferredColorScheme(.light)
         }
     }

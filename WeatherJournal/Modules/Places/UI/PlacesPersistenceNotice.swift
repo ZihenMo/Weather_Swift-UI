@@ -21,25 +21,20 @@ struct PlacesPersistenceNotice: View {
         if repository.recovery == .failed || repository.persistence == .unsaved {
             warning
         } else if repository.persistence == .saving {
-            ProgressView(PlacesText.saving.value).padding(JournalStyle.Space.card)
+            ProgressView(PlacesText.saving.value).padding(AppSpacing.medium)
         } else if repository.recovery == .loading {
-            ProgressView(PlacesText.loading.value).padding(JournalStyle.Space.card)
+            ProgressView(PlacesText.loading.value).padding(AppSpacing.medium)
         }
     }
 
     private var warning: some View {
-        VStack(alignment: .leading, spacing: JournalStyle.Space.item) {
-            Text(repository.recovery == .failed ? PlacesText.recoveryFailed.value : PlacesText.unsaved.value)
-                .font(JournalStyle.Font.callout)
+        AppNotice(repository.recovery == .failed ? PlacesText.recoveryFailed.value : PlacesText.unsaved.value) {
             recoveryActions
         }
-        .padding(JournalStyle.Space.card)
-        .frame(maxWidth: .infinity, alignment: .leading)
-        .background(JournalStyle.Color.warning, in: RoundedRectangle(cornerRadius: JournalStyle.Radius.notice))
     }
 
     private var recoveryActions: some View {
-        HStack {
+        VStack(alignment: .leading, spacing: 0) {
             Button(
                 repository.recovery == .failed ? PlacesText.retryRead.value : PlacesText.retrySave.value, action: retry)
             if allowsRebuild, repository.recovery == .failed {
