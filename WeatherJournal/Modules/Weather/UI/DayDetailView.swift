@@ -117,3 +117,24 @@ struct DayDetailView: View {
         .accessibilityElement(children: .combine)
     }
 }
+
+#if DEBUG
+    @MainActor
+    private struct DayDetailView_Previews: PreviewProvider {
+        static var previews: some View {
+            Group {
+                scene.previewDisplayName("单日详情")
+                scene.environment(\.dynamicTypeSize, .accessibility3).previewDisplayName("单日详情 · 大字号")
+            }
+            .journalPreview()
+        }
+
+        private static var scene: some View {
+            NavigationView {
+                DayDetailView(
+                    name: WeatherPreviewData.name, forecast: WeatherPreviewData.forecast, day: WeatherPreviewData.day)
+            }
+            .navigationViewStyle(.stack)
+        }
+    }
+#endif

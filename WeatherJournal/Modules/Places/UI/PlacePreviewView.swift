@@ -48,3 +48,23 @@ struct PlacePreviewView<Content: View>: View {
         }
     }
 }
+
+#if DEBUG
+    @MainActor
+    private struct PlacePreviewView_Previews: PreviewProvider {
+        static var previews: some View {
+            PlacesPreviewScene { repository in
+                NavigationView {
+                    PlacePreviewView(
+                        repository: repository, place: PlacesPreviewData.candidate, close: {}, added: { _ in }
+                    ) {
+                        PlaceRow(place: PlacesPreviewData.candidate, showsChevron: false).padding(
+                            JournalStyle.Space.page)
+                    }
+                }
+                .navigationViewStyle(.stack)
+            }
+            .previewDisplayName("候选概览 · 导航外壳")
+        }
+    }
+#endif

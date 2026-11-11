@@ -138,3 +138,19 @@ struct WeatherView: View {
         if phase == .active, isVisible { model.activate(language: language) }
     }
 }
+
+#if DEBUG
+    @MainActor
+    private struct WeatherView_Previews: PreviewProvider {
+        static var previews: some View {
+            Group {
+                WeatherPreviewScene(.ready).previewDisplayName("天气 · 正常")
+                WeatherPreviewScene(.offline).previewDisplayName("天气 · 离线缓存")
+                WeatherPreviewScene(.failure).previewDisplayName("天气 · 加载失败")
+                WeatherPreviewScene(.ready)
+                    .environment(\.dynamicTypeSize, .accessibility3)
+                    .previewDisplayName("天气 · 辅助功能字号")
+            }
+        }
+    }
+#endif

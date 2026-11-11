@@ -141,3 +141,25 @@ struct PlaceRow: View {
         .contentShape(Rectangle())
     }
 }
+
+#if DEBUG
+    @MainActor
+    private struct PlacesView_Previews: PreviewProvider {
+        static var previews: some View {
+            Group {
+                scene(.ready).previewDisplayName("地点列表")
+                scene(.empty).previewDisplayName("地点列表 · 空态")
+                PlaceRow(place: PlacesPreviewData.city)
+                    .padding(JournalStyle.Space.page).previewLayout(.sizeThatFits).previewDisplayName("地点摘要")
+            }
+            .journalPreview()
+        }
+
+        private static func scene(_ scenario: PlacesPreviewData.Scenario) -> some View {
+            PlacesPreviewScene(scenario) { repository in
+                NavigationView { PlacesView(repository: repository, search: {}, select: { _ in }) }
+                    .navigationViewStyle(.stack)
+            }
+        }
+    }
+#endif

@@ -85,3 +85,17 @@ private struct TemperatureTrend: View {
         }
     }
 }
+
+#if DEBUG
+    @MainActor
+    private struct HourlyForecastView_Previews: PreviewProvider {
+        static var previews: some View {
+            HourlyForecastView(hours: WeatherPreviewData.hours)
+                .padding(JournalStyle.Space.card)
+                .frame(width: JournalPreview.contentWidth)
+                .journalPreview()
+                .previewLayout(.sizeThatFits)
+                .previewDisplayName("逐小时 · 含缺失指标")
+        }
+    }
+#endif

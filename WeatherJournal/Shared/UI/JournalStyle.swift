@@ -77,3 +77,15 @@ struct SectionHeading: View {
             .frame(maxWidth: .infinity, alignment: .leading).accessibilityAddTraits(.isHeader)
     }
 }
+
+#if DEBUG
+    private struct SectionHeading_Previews: PreviewProvider {
+        static var previews: some View {
+            SectionHeading(CommonText.currentLocation.value)
+                .padding(JournalStyle.Space.page)
+                .journalPreview()
+                .previewLayout(.sizeThatFits)
+                .previewDisplayName("区块标题")
+        }
+    }
+#endif

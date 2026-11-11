@@ -118,3 +118,26 @@ private struct PlaceSearchResults: View {
         .accessibilityIdentifier(PlacesIdentifier.candidate(place.id))
     }
 }
+
+#if DEBUG
+    @MainActor
+    private struct PlaceSearchView_Previews: PreviewProvider {
+        static var previews: some View {
+            Group {
+                NavigationView {
+                    PlaceSearchView(
+                        find: PlacesPreviewData.search, delay: PlacesPolicy.standard.searchDelayNanoseconds,
+                        sleep: { try await Task.sleep(nanoseconds: $0) }, preview: { _ in })
+                }
+                .navigationViewStyle(.stack).previewDisplayName("搜索 · 可输入样本地点")
+                PlaceSearchResults(state: .results(PlacesPreviewData.saved), select: { _ in }, retry: {})
+                    .previewDisplayName("搜索结果")
+                PlaceSearchResults(state: .results([]), select: { _ in }, retry: {})
+                    .previewLayout(.sizeThatFits).previewDisplayName("搜索 · 无匹配")
+                PlaceSearchResults(state: .failed, select: { _ in }, retry: {})
+                    .previewLayout(.sizeThatFits).previewDisplayName("搜索 · 失败")
+            }
+            .journalPreview()
+        }
+    }
+#endif

@@ -202,3 +202,26 @@ struct WeatherMetrics: View {
         .accessibilityElement(children: .combine)
     }
 }
+
+#if DEBUG
+    @MainActor
+    private struct WeatherCards_Previews: PreviewProvider {
+        static var previews: some View {
+            Group {
+                WeatherCard(
+                    name: WeatherPreviewData.name, region: WeatherPreviewData.region,
+                    forecast: WeatherPreviewData.forecast
+                )
+                .previewDisplayName("当前天气卡")
+                ForecastWeek(days: WeatherPreviewData.forecast.days, select: { _ in }).previewDisplayName("七日预报")
+                WeatherMetrics(forecast: WeatherPreviewData.forecast).previewDisplayName("天气指标")
+                WeatherMetrics(forecast: WeatherPreviewData.forecast)
+                    .environment(\.dynamicTypeSize, .accessibility3).previewDisplayName("天气指标 · 大字号")
+            }
+            .padding(JournalStyle.Space.page)
+            .frame(width: JournalPreview.contentWidth)
+            .journalPreview()
+            .previewLayout(.sizeThatFits)
+        }
+    }
+#endif

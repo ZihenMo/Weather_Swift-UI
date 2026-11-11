@@ -168,3 +168,14 @@ private struct DestinationLink<Item, Destination: View>: View {
         .isDetailLink(false)
     }
 }
+
+#if DEBUG
+    @MainActor
+    private struct JournalRoot_Previews: PreviewProvider {
+        static var previews: some View {
+            JournalRoot(dependencies: AppPreviewData.dependencies())
+                .journalPreview()
+                .previewDisplayName("天气 · 完整导航")
+        }
+    }
+#endif

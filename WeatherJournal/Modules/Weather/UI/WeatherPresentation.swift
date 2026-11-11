@@ -61,3 +61,15 @@ struct WeatherArt: View {
         Image(decorative: name).resizable().scaledToFit().frame(width: size, height: size)
     }
 }
+
+#if DEBUG
+    private struct WeatherArt_Previews: PreviewProvider {
+        static var previews: some View {
+            WeatherArt(name: WeatherAsset.sun, size: WeatherStyle.detailIcon)
+                .padding(JournalStyle.Space.page)
+                .journalPreview()
+                .previewLayout(.sizeThatFits)
+                .previewDisplayName("天气图标")
+        }
+    }
+#endif

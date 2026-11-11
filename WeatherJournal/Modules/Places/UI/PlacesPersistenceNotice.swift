@@ -52,3 +52,23 @@ struct PlacesPersistenceNotice: View {
     private func retry() { Task { await repository.retryPersistence() } }
     private func rebuild() { Task { await repository.rebuild() } }
 }
+
+#if DEBUG
+    @MainActor
+    private struct PlacesPersistenceNotice_Previews: PreviewProvider {
+        static var previews: some View {
+            Group {
+                PlacesPreviewScene(.readFailure) { repository in
+                    PlacesPersistenceNotice(repository: repository, allowsRebuild: true)
+                }
+                .previewDisplayName("收藏读取失败")
+                PlacesPreviewScene(.writeFailure) { repository in
+                    PlacesPersistenceNotice(repository: repository)
+                }
+                .previewDisplayName("收藏尚未保存")
+            }
+            .frame(width: JournalPreview.contentWidth)
+            .previewLayout(.sizeThatFits)
+        }
+    }
+#endif
