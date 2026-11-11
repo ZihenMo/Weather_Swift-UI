@@ -1,0 +1,8 @@
+// Non-secret defaults. Local.xcconfig may override these values.
+WJ_BUNDLE_IDENTIFIER = com.example.weather.swiftui
+PRODUCT_BUNDLE_IDENTIFIER = $(WJ_BUNDLE_IDENTIFIER)
+WJ_SLASH = /
+WJ_FORECAST_URL = https:$(WJ_SLASH)/api.open-meteo.com/v1/forecast
+WJ_SEARCH_URL = https:$(WJ_SLASH)/geocoding-api.open-meteo.com/v1/search
+WJ_ATTRIBUTION_URL = https:$(WJ_SLASH)/open-meteo.com/
+#include? "Local.xcconfig"

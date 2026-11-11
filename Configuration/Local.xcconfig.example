@@ -1,0 +1,7 @@
+// Copy to Local.xcconfig. Do not put credentials here.
+// WJ_BUNDLE_IDENTIFIER = your.registered.bundle.identifier
+// DEVELOPMENT_TEAM = YOUR_TEAM_ID
+// URLs must retain the slash variable to avoid xcconfig comment parsing.
+// WJ_FORECAST_URL = https:$(WJ_SLASH)/your-host/v1/forecast
+// WJ_SEARCH_URL = https:$(WJ_SLASH)/your-host/v1/search
+// WJ_ATTRIBUTION_URL = https:$(WJ_SLASH)/your-attribution-page/

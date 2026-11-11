@@ -1,0 +1,29 @@
+# Local Xcode state
+.DS_Store
+DerivedData/
+build/
+xcuserdata/
+*.xcuserstate
+
+# Local configuration, tools and generated delivery artifacts
+Configuration/Local.xcconfig
+.bundle/
+.tools/
+vendor/
+artifacts/
+.env
+.env.*
+!.env.example
+fastlane/.env
+fastlane/.env.*
+!fastlane/.env.example
+fastlane/report.xml
+fastlane/README.md
+*.ipa
+*.dSYM.zip
+
+# Local code intelligence index
+.codegraph/
+
+# Optional machine-local project memory
+.codex/project-memory.md

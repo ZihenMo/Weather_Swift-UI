@@ -1,0 +1,50 @@
+require "shellwords"
+require_relative "DeliveryConfig"
+
+default_platform(:ios)
+
+platform :ios do
+  desc "Create a locally signed Ad Hoc archive and IPA; no upload"
+  lane :package do
+    signing = DeliveryConfig.signing
+    arguments = {
+      "PRODUCT_BUNDLE_IDENTIFIER" => signing[:identifier],
+      "DEVELOPMENT_TEAM" => signing[:team],
+      "CODE_SIGN_STYLE" => "Manual",
+      "CODE_SIGN_IDENTITY" => signing[:identity],
+      "PROVISIONING_PROFILE_SPECIFIER" => signing[:profile]
+    }.map { |key, value| "#{key}=#{value}" }.shelljoin
+    build_app(
+      project: DeliveryConfig::PROJECT,
+      scheme: DeliveryConfig::SCHEME,
+      configuration: DeliveryConfig::CONFIGURATION,
+      clean: true,
+      output_directory: DeliveryConfig::OUTPUT,
+      output_name: DeliveryConfig::OUTPUT_NAME,
+      archive_path: File.join(DeliveryConfig::OUTPUT, "WeatherJournal.xcarchive"),
+      derived_data_path: File.join(DeliveryConfig::OUTPUT, "DerivedData"),
+      buildlog_path: File.join(DeliveryConfig::OUTPUT, "logs"),
+      export_method: DeliveryConfig::EXPORT_METHOD,
+      export_team_id: signing[:team],
+      skip_profile_detection: true,
+      xcargs: arguments,
+      export_options: {
+        method: DeliveryConfig::EXPORT_METHOD,
+        signingStyle: DeliveryConfig::SIGNING_STYLE,
+        teamID: signing[:team],
+        signingCertificate: signing[:identity],
+        provisioningProfiles: { signing[:identifier] => signing[:profile] },
+        manageAppVersionAndBuildNumber: false
+      }
+    )
+  end
+
+  desc "Upload an existing IPA to Pgyer using environment credentials and approved release notes"
+  lane :distribute do |options|
+    notes = DeliveryConfig.required("RELEASE_NOTES")
+    api_key = DeliveryConfig.required("PGYER_API_KEY")
+    ipa = File.expand_path(options[:ipa] || DeliveryConfig.required("IPA_PATH"), DeliveryConfig::ROOT)
+    UI.user_error!("An existing .ipa file is required") unless File.file?(ipa) && File.extname(ipa) == ".ipa"
+    pgyer(api_key: api_key, ipa: ipa, update_description: notes)
+  end
+end
