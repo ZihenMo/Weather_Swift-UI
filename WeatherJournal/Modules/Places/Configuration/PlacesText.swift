@@ -1,0 +1,28 @@
+import SwiftUI
+
+enum PlacesText {
+    static let title = LocalizedText(key: "Places")
+    static let choose = LocalizedText(key: "Choose a place")
+    static let search = LocalizedText(key: "Search places")
+    static let saved = LocalizedText(key: "Saved places")
+    static let empty = LocalizedText(key: "No saved places")
+    static let done = LocalizedText(key: "Done")
+    static let edit = LocalizedText(key: "Edit")
+    static let query = LocalizedText(key: "City or district")
+    static let clearSearch = LocalizedText(key: "Clear search")
+    static let searching = LocalizedText(key: "Searching…")
+    static let searchFailed = LocalizedText(key: "Search failed. Retry")
+    static let noMatches = LocalizedText(key: "No matches. Try another name.")
+    static let preview = LocalizedText(key: "Weather preview")
+    static let added = LocalizedText(key: "Added")
+    static let add = LocalizedText(key: "Add")
+    static let loading = LocalizedText(key: "Loading saved places…")
+    static let retryRead = LocalizedText(key: "Retry loading saved places")
+    static let recoveryFailed = LocalizedText(key: "Saved places could not be read. Changes are kept for this session.")
+    static let unsaved = LocalizedText(key: "Place changes have not been saved.")
+    static let saving = LocalizedText(key: "Saving places…")
+    static let retrySave = LocalizedText(key: "Retry saving")
+    static let rebuild = LocalizedText(key: "Rebuild saved places")
+    static let rebuildMessage = LocalizedText(key: "Back up the unreadable file and save the places currently shown?")
+    static let removeNamed = LocalizedText(key: "Remove %@")
+}
