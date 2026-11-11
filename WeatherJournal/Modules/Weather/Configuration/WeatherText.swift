@@ -8,6 +8,7 @@ enum WeatherText {
     static let asOf = LocalizedText(key: "Weather as of %@ · local")
     static let refresh = LocalizedText(key: "Refresh")
     static let updateFailed = LocalizedText(key: "Update failed. Showing the last forecast.")
+    static let today = LocalizedText(key: "Today")
     static let week = LocalizedText(key: "7-day forecast")
     static let details = LocalizedText(key: "Weather details")
     static let attribution = LocalizedText(key: "Weather data by Open-Meteo")

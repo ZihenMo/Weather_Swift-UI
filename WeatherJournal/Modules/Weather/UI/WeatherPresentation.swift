@@ -3,28 +3,54 @@ import SwiftUI
 
 enum WeatherPresentation {
     static func degrees(_ value: Double?) -> String {
-        guard let value else { return WeatherFormat.unavailable }
+        guard let value, value.isFinite else { return WeatherFormat.unavailable }
         return value.formatted(.number.precision(.fractionLength(WeatherFormat.degreePrecision)))
             + WeatherFormat.degrees
     }
 
     static func metric(_ value: Double?, unit: String) -> String {
-        guard let value else { return WeatherFormat.unavailable }
+        guard let value, value.isFinite else { return WeatherFormat.unavailable }
         return value.formatted(.number.precision(.fractionLength(WeatherFormat.metricPrecision))) + unit
     }
 
     static func date(_ raw: String, locale: Locale) -> String {
+        monthDay(raw, locale: locale) + WeatherFormat.dateSeparator + weekday(raw, locale: locale)
+    }
+
+    static func heroDate(_ raw: String, locale: Locale) -> String {
+        monthDay(raw, locale: locale) + WeatherFormat.wordSeparator + weekday(raw, locale: locale)
+    }
+
+    static func monthDay(_ raw: String, locale: Locale) -> String {
+        formattedDate(raw, locale: locale, template: WeatherFormat.monthDayTemplate)
+    }
+
+    static func weekday(_ raw: String, locale: Locale) -> String {
+        formattedDate(raw, locale: locale, template: WeatherFormat.weekdayTemplate)
+    }
+
+    static func shortDate(_ raw: String, locale: Locale) -> String {
         guard let day = ForecastDate.parse(raw) else { return raw }
+        let formatter = dateFormatter(locale: locale)
+        formatter.dateFormat = WeatherFormat.shortDateFormat
+        return formatter.string(from: day)
+    }
+
+    static func timestamp(_ time: LocalForecastTime, locale: Locale) -> String { time.clock }
+
+    private static func formattedDate(_ raw: String, locale: Locale, template: String) -> String {
+        guard let day = ForecastDate.parse(raw) else { return raw }
+        let formatter = dateFormatter(locale: locale)
+        formatter.setLocalizedDateFormatFromTemplate(template)
+        return formatter.string(from: day)
+    }
+
+    private static func dateFormatter(locale: Locale) -> DateFormatter {
         let formatter = DateFormatter()
         formatter.locale = locale
         formatter.calendar = Calendar(identifier: .gregorian)
         formatter.timeZone = TimeZone(secondsFromGMT: 0)
-        formatter.setLocalizedDateFormatFromTemplate(WeatherContract.dateTemplate)
-        return formatter.string(from: day)
-    }
-
-    static func timestamp(_ time: LocalForecastTime, locale: Locale) -> String {
-        date(time.date, locale: locale) + WeatherFormat.dateSeparator + time.clock
+        return formatter
     }
 
     static func cachedAt(_ date: Date, locale: Locale) -> String {

@@ -1,6 +1,11 @@
 import SwiftUI
 
 enum PlacesText {
+    static let backToWeather = LocalizedText(key: "Weather")
+    static let location = LocalizedText(key: "Location")
+    static let examples = LocalizedText(key: "Suggested regions")
+    static let results = LocalizedText(key: "Search results")
+    static let view = LocalizedText(key: "View")
     static let title = LocalizedText(key: "Places")
     static let choose = LocalizedText(key: "Choose a place")
     static let search = LocalizedText(key: "Search places")

@@ -1,7 +1,8 @@
 import SwiftUI
 
-/// 地点概览的导航外壳，天气内容由 App 注入。
+/// 地区概览呈现关闭与收藏动作，天气内容由 App 注入，关闭后保留搜索状态。
 struct PlacePreviewView<Content: View>: View {
+    @Environment(\.dynamicTypeSize) private var dynamicTypeSize
     @ObservedObject var repository: PlacesRepository
     @State private var adding = false
 
@@ -11,27 +12,63 @@ struct PlacePreviewView<Content: View>: View {
     @ViewBuilder let content: () -> Content
 
     var body: some View {
-        content()
-            .navigationTitle(PlacesText.preview.value)
-            .navigationBarTitleDisplayMode(.inline)
-            .navigationBarBackButtonHidden(true)
-            .toolbar {
-                ToolbarItem(placement: .navigationBarLeading) { closeButton }
-                ToolbarItem(placement: .navigationBarTrailing) { addButton }
+        VStack(spacing: JournalStyle.Space.card) {
+            heading
+                .padding(.horizontal, PlacesStyle.panelInset)
+            content()
+        }
+        .background(JournalStyle.Color.panel)
+    }
+
+    @ViewBuilder private var heading: some View {
+        if dynamicTypeSize.isAccessibilitySize {
+            VStack(spacing: JournalStyle.Space.small) {
+                title
+                actions
             }
+        } else {
+            ZStack {
+                title
+                actions
+            }
+        }
+    }
+
+    private var title: some View {
+        Text(PlacesText.preview.value)
+            .journalFont(size: PlacesStyle.previewTitleSize, weight: .semibold)
+            .accessibilityAddTraits(.isHeader)
+    }
+
+    private var actions: some View {
+        HStack {
+            closeButton
+            Spacer(minLength: JournalStyle.Space.item)
+            addButton
+        }
     }
 
     private var closeButton: some View {
-        Button(action: close) {
-            Image(systemName: JournalSymbol.close).accessibilityLabel(Text(CommonText.close.value))
-        }
-        .disabled(adding)
-        .accessibilityIdentifier(PlacesIdentifier.closePreview)
+        Button(CommonText.close.value, action: close)
+            .journalFont(size: PlacesStyle.actionSize)
+            .foregroundColor(JournalStyle.Color.accent)
+            .frame(minHeight: JournalStyle.Size.touchTarget)
+            .disabled(adding)
+            .accessibilityIdentifier(PlacesIdentifier.closePreview)
     }
 
     private var addButton: some View {
         Button(action: add) {
-            if isSaved { Text(PlacesText.added.value) } else { Text(PlacesText.add.value) }
+            Text(isSaved ? PlacesText.added.value : PlacesText.add.value)
+                .journalFont(size: PlacesStyle.bodySize, weight: .semibold)
+                .foregroundColor(isSaved || adding ? JournalStyle.Color.secondary : JournalStyle.Color.onAccent)
+                .padding(.horizontal, PlacesStyle.addHorizontalInset)
+                .padding(.vertical, PlacesStyle.addVerticalInset)
+                .background(
+                    isSaved || adding ? JournalStyle.Color.search : JournalStyle.Color.accent,
+                    in: RoundedRectangle(cornerRadius: PlacesStyle.addRadius)
+                )
+                .frame(minHeight: JournalStyle.Size.touchTarget)
         }
         .disabled(adding || isSaved)
         .accessibilityIdentifier(PlacesIdentifier.add)
@@ -54,17 +91,13 @@ struct PlacePreviewView<Content: View>: View {
     private struct PlacePreviewView_Previews: PreviewProvider {
         static var previews: some View {
             PlacesPreviewScene { repository in
-                NavigationView {
-                    PlacePreviewView(
-                        repository: repository, place: PlacesPreviewData.candidate, close: {}, added: { _ in }
-                    ) {
-                        PlaceRow(place: PlacesPreviewData.candidate, showsChevron: false).padding(
-                            JournalStyle.Space.page)
-                    }
+                PlacePreviewView(
+                    repository: repository, place: PlacesPreviewData.candidate, close: {}, added: { _ in }
+                ) {
+                    PlaceRow(place: PlacesPreviewData.candidate, showsChevron: false).padding(JournalStyle.Space.page)
                 }
-                .navigationViewStyle(.stack)
             }
-            .previewDisplayName("候选概览 · 导航外壳")
+            .previewDisplayName("候选概览 · 标题与收藏")
         }
     }
 #endif

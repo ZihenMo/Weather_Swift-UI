@@ -59,6 +59,8 @@
 			B6FA48CE7A10FD62C982D81D /* WeatherPreviewData.swift in Sources */ = {isa = PBXBuildFile; fileRef = 331C6912E5FD8952245B01E2 /* WeatherPreviewData.swift */; };
 			E5A248203E00AA47CB00F096 /* HourlyForecastView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 042A6426E99DB5E20F1E5D61 /* HourlyForecastView.swift */; };
 			66C75A11A5EBFA7427133BC4 /* PreviewStyle.swift in Sources */ = {isa = PBXBuildFile; fileRef = F1083A200943E684566E3E6B /* PreviewStyle.swift */; };
+		1F14ACD286BE4D4FC2BC2911 /* PlacesPresets.swift in Sources */ = {isa = PBXBuildFile; fileRef = A0AA494A5DCA850B40077AB2 /* PlacesPresets.swift */; };
+		E44AAD24DC47393DA2DE423F /* JournalPanel.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3AA0CAF83F5B86C8205B05C8 /* JournalPanel.swift */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
@@ -134,6 +136,8 @@
 			331C6912E5FD8952245B01E2 /* WeatherPreviewData.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WeatherPreviewData.swift; sourceTree = "<group>"; };
 			042A6426E99DB5E20F1E5D61 /* HourlyForecastView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HourlyForecastView.swift; sourceTree = "<group>"; };
 			F1083A200943E684566E3E6B /* PreviewStyle.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PreviewStyle.swift; sourceTree = "<group>"; };
+		A0AA494A5DCA850B40077AB2 /* PlacesPresets.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PlacesPresets.swift; sourceTree = "<group>"; };
+		3AA0CAF83F5B86C8205B05C8 /* JournalPanel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = JournalPanel.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXGroup section */
@@ -291,6 +295,7 @@
 		A4F7C1079786BF0F1BA28146 /* UI */ = {
 			isa = PBXGroup;
 			children = (
+				3AA0CAF83F5B86C8205B05C8 /* JournalPanel.swift */,
 				A6EC88A29DD9509B08389D70 /* JournalStyle.swift */,
 			);
 			path = UI;
@@ -360,6 +365,7 @@
 			CEB12C95A6B7CE21FAA431A0 /* Configuration */ = {
 				isa = PBXGroup;
 				children = (
+				A0AA494A5DCA850B40077AB2 /* PlacesPresets.swift */,
 					92163639672F76E15F05BBCC /* PlacesIdentifier.swift */,
 					43A3E6D1F3FFB82E19D1272A /* PlacesPolicy.swift */,
 					A937AF44567767BB4DF7259E /* PlacesText.swift */,
@@ -539,6 +545,8 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				E44AAD24DC47393DA2DE423F /* JournalPanel.swift in Sources */,
+				1F14ACD286BE4D4FC2BC2911 /* PlacesPresets.swift in Sources */,
 					7B3EB451911504767F93777D /* AppPreviewData.swift in Sources */,
 					F8A5FCE7EAD8964F76FC12C8 /* PlacesPreviewData.swift in Sources */,
 					B6FA48CE7A10FD62C982D81D /* WeatherPreviewData.swift in Sources */,

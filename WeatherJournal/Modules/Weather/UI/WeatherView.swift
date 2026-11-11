@@ -7,6 +7,7 @@ struct WeatherView: View {
     @ObservedObject var model: WeatherViewModel
     @State private var isVisible = false
 
+    var isPreview = false
     let attributionURL: URL
     var openPlaces: (() -> Void)?
     var openDay: ((String, Forecast, DailyForecast) -> Void)?
@@ -16,7 +17,7 @@ struct WeatherView: View {
             ScrollView { content }
                 .onChange(of: model.target) { _ in scroll.scrollTo(WeatherIdentifier.top, anchor: .top) }
         }
-        .background(JournalStyle.Color.background.ignoresSafeArea())
+        .background((isPreview ? JournalStyle.Color.panel : JournalStyle.Color.background).ignoresSafeArea())
         .onAppear(perform: appear)
         .onDisappear { isVisible = false }
         .onChange(of: language) { model.activate(language: $0) }
@@ -26,7 +27,7 @@ struct WeatherView: View {
     // MARK: - 天气内容
 
     private var content: some View {
-        VStack(alignment: .leading, spacing: JournalStyle.Space.card) {
+        VStack(alignment: .leading, spacing: 0) {
             JournalStyle.Color.transparent.frame(height: 0).id(WeatherIdentifier.top)
             if let forecast = model.forecast {
                 forecastContent(forecast)
@@ -40,46 +41,39 @@ struct WeatherView: View {
     }
 
     @ViewBuilder private func forecastContent(_ forecast: Forecast) -> some View {
-        WeatherCard(name: displayName, region: region, forecast: forecast)
-        updateInformation(forecast)
-        updateStatus
-        if let openDay {
-            SectionHeading(WeatherText.week.value)
-            ForecastWeek(days: forecast.days) { openDay(displayName, forecast, $0) }
+        WeatherCard(
+            name: displayName, region: region, forecast: forecast, isPreview: isPreview,
+            isDevice: model.target == .device)
+        if !isPreview {
+            updateInformation(forecast)
+            updateStatus
         }
-        SectionHeading(WeatherText.details.value)
+        if let openDay {
+            SectionHeading(WeatherText.week.value, icon: JournalAsset.calendar)
+                .padding(.top, WeatherStyle.sectionTop).padding(.bottom, WeatherStyle.sectionBottom)
+            ForecastWeek(days: forecast.days, today: forecast.time?.date) { openDay(displayName, forecast, $0) }
+        }
+        if !isPreview {
+            SectionHeading(WeatherText.details.value)
+                .padding(.top, WeatherStyle.sectionTop).padding(.bottom, WeatherStyle.sectionBottom)
+        }
         WeatherMetrics(forecast: forecast)
+            .padding(.top, isPreview ? JournalStyle.Space.card : 0)
         Link(WeatherText.attribution.value, destination: attributionURL)
             .font(JournalStyle.Font.caption)
+            .padding(.top, JournalStyle.Space.card)
     }
 
-    private func updateInformation(_ forecast: Forecast) -> some View {
-        VStack(alignment: .leading, spacing: JournalStyle.Space.item) {
-            if let time = forecast.time {
-                Text(verbatim: WeatherText.asOf.format(WeatherPresentation.timestamp(time, locale: locale)))
-                    .font(JournalStyle.Font.note)
-                    .foregroundColor(JournalStyle.Color.secondary)
-            }
-            cacheInformation
-            Button(action: model.refresh) {
-                Label(WeatherText.refresh.value, systemImage: JournalSymbol.refresh)
-            }
-            .disabled(isUpdating)
-        }
-    }
-
-    @ViewBuilder private var cacheInformation: some View {
-        if model.source != .live, let snapshot = model.snapshot {
-            Text(verbatim: WeatherText.cached.format(WeatherPresentation.cachedAt(snapshot.fetchedAt, locale: locale)))
-                .font(JournalStyle.Font.note)
-        }
-        if model.source == .previousLocation {
-            Text(WeatherText.previousLocation.value).font(JournalStyle.Font.note)
+    @ViewBuilder private func updateInformation(_ forecast: Forecast) -> some View {
+        if let time = forecast.time {
+            Text(verbatim: WeatherText.asOf.format(time.clock))
+                .font(JournalStyle.Font.caption)
+                .foregroundColor(JournalStyle.Color.secondary)
+                .monospacedDigit()
         }
     }
 
     @ViewBuilder private var updateStatus: some View {
-        if isUpdating { ProgressView().progressViewStyle(.linear) }
         if case .failed = model.phase {
             Text(WeatherText.updateFailed.value).font(JournalStyle.Font.note)
         }

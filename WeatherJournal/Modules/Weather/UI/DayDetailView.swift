@@ -2,6 +2,7 @@ import SwiftUI
 
 /// 单日详情持有进入时的预报快照，切换时段只筛选本地数据。
 struct DayDetailView: View {
+    @Environment(\.dismiss) private var dismiss
     @Environment(\.locale) private var locale
     @Environment(\.dynamicTypeSize) private var dynamicTypeSize
     @State private var period: DayPeriod
@@ -19,16 +20,61 @@ struct DayDetailView: View {
 
     var body: some View {
         ScrollView {
-            VStack(alignment: .leading, spacing: JournalStyle.Space.section) {
+            VStack(alignment: .leading, spacing: 0) {
+                navigationHeader.padding(.bottom, JournalStyle.Space.item)
                 dailySummary
                 SectionHeading(WeatherText.hourly.value)
+                    .padding(.top, WeatherStyle.sectionTop).padding(.bottom, WeatherStyle.sectionBottom)
+                    .padding(.horizontal, JournalStyle.Space.tight)
                 hourlySection
             }
-            .padding(JournalStyle.Space.page)
+            .padding(.horizontal, JournalStyle.Space.page).padding(.bottom, JournalStyle.Space.page)
         }
-        .background(JournalStyle.Color.background.ignoresSafeArea())
-        .navigationBarTitleDisplayMode(.inline)
-        .toolbar { ToolbarItem(placement: .principal) { navigationTitle } }
+        .background(JournalStyle.Color.background.ignoresSafeArea()).navigationBarHidden(true)
+    }
+
+    @ViewBuilder private var navigationHeader: some View {
+        if dynamicTypeSize.isAccessibilitySize {
+            VStack(alignment: .leading, spacing: JournalStyle.Space.item) {
+                backButton
+                navigationTitle.frame(maxWidth: .infinity)
+            }
+        } else {
+            ZStack {
+                navigationTitle.padding(.horizontal, WeatherStyle.navigationTitleInset)
+                HStack {
+                    backButton
+                    Spacer(minLength: 0)
+                }
+            }
+            .frame(minHeight: WeatherStyle.navigationHeight)
+        }
+    }
+
+    private var backButton: some View {
+        Button {
+            dismiss()
+        } label: {
+            HStack(spacing: JournalStyle.Space.small) {
+                JournalIcon(name: JournalAsset.back, size: WeatherStyle.FontSize.back)
+                Text(WeatherText.title.value)
+            }
+            .journalFont(size: WeatherStyle.FontSize.back, relativeTo: .callout)
+            .foregroundColor(JournalStyle.Color.accent)
+            .frame(minHeight: JournalStyle.Size.touchTarget)
+        }
+        .buttonStyle(.plain)
+    }
+
+    private var navigationTitle: some View {
+        VStack(spacing: JournalStyle.Space.small) {
+            Text(verbatim: name)
+                .journalFont(size: WeatherStyle.FontSize.navigation, weight: .semibold, relativeTo: .headline)
+            Text(verbatim: WeatherPresentation.date(day.date, locale: locale))
+                .journalFont(size: WeatherStyle.FontSize.caption, relativeTo: .caption)
+                .foregroundColor(JournalStyle.Color.secondary)
+        }
+        .multilineTextAlignment(.center).accessibilityElement(children: .combine)
     }
 
     private var dailySummary: some View {
@@ -36,63 +82,116 @@ struct DayDetailView: View {
             if dynamicTypeSize.isAccessibilitySize {
                 VStack(alignment: .leading, spacing: JournalStyle.Space.related) {
                     conditionLabel
-                    HStack {
-                        extreme(WeatherText.low, day.low)
-                        Spacer()
-                        extreme(WeatherText.high, day.high)
-                    }
+                    extremes
                 }
             } else {
                 HStack {
                     conditionLabel
-                    Spacer()
-                    extreme(WeatherText.low, day.low)
-                    extreme(WeatherText.high, day.high)
+                    Spacer(minLength: JournalStyle.Space.item)
+                    extremes
                 }
             }
         }
         .foregroundColor(JournalStyle.Color.onAccent)
-        .padding(JournalStyle.Space.page)
-        .background(JournalStyle.Color.sea, in: RoundedRectangle(cornerRadius: JournalStyle.Radius.summary))
+        .padding(.vertical, WeatherStyle.summaryVerticalPadding).padding(.horizontal, JournalStyle.Space.prominent)
+        .frame(maxWidth: .infinity, alignment: .leading)
+        .background(summaryGradient, in: RoundedRectangle(cornerRadius: WeatherStyle.summaryRadius))
     }
 
     private var conditionLabel: some View {
         let condition = WeatherPresentation.condition(day.code, daylight: .day)
-        return HStack {
+        return HStack(spacing: JournalStyle.Space.item) {
             WeatherArt(name: condition.art, size: WeatherStyle.detailIcon)
-            Text(condition.label.value).font(JournalStyle.Font.headline)
+            Text(condition.label.value)
+                .journalFont(size: WeatherStyle.FontSize.summary, weight: .bold, relativeTo: .title3)
+        }
+    }
+
+    private var extremes: some View {
+        HStack(spacing: WeatherStyle.extremeSpacing) {
+            extreme(WeatherText.low, day.low)
+            extreme(WeatherText.high, day.high)
         }
     }
 
     private func extreme(_ title: LocalizedText, _ temperature: Double?) -> some View {
-        VStack(alignment: .leading, spacing: JournalStyle.Space.hairline) {
-            Text(title.value).font(JournalStyle.Font.caption)
-            Text(verbatim: WeatherPresentation.degrees(temperature)).font(JournalStyle.Font.section)
+        VStack(alignment: .leading, spacing: 0) {
+            Text(title.value).journalFont(size: WeatherStyle.FontSize.extremeLabel, relativeTo: .caption2)
+                .foregroundColor(WeatherStyle.Color.extremeLabel)
+            Text(verbatim: WeatherPresentation.degrees(temperature))
+                .journalFont(size: WeatherStyle.FontSize.extreme, weight: .medium, relativeTo: .title2)
+                .monospacedDigit()
         }
         .accessibilityElement(children: .combine)
     }
 
+    private var summaryGradient: LinearGradient {
+        LinearGradient(
+            colors: [WeatherStyle.Color.summaryStart, WeatherStyle.Color.summaryEnd],
+            startPoint: .topLeading, endPoint: .bottomTrailing)
+    }
+
     private var hourlySection: some View {
-        VStack(spacing: JournalStyle.Space.section) {
-            if dynamicTypeSize.isAccessibilitySize {
-                periodPicker.pickerStyle(.menu)
-            } else {
-                periodPicker.pickerStyle(.segmented)
-            }
+        VStack(spacing: 0) {
+            periodSelection.padding(.bottom, WeatherStyle.periodBottom)
             hourlyContent
         }
         .monospacedDigit()
-        .padding(JournalStyle.Space.card)
-        .journalCard()
+        .padding(.horizontal, WeatherStyle.hourCardHorizontalPadding)
+        .padding(.top, WeatherStyle.hourCardTopPadding).padding(.bottom, WeatherStyle.hourCardBottomPadding)
+        .background(
+            LinearGradient(gradient: WeatherStyle.hourGradient, startPoint: .top, endPoint: .bottom),
+            in: RoundedRectangle(cornerRadius: WeatherStyle.hourCardRadius)
+        )
+        .overlay(
+            RoundedRectangle(cornerRadius: WeatherStyle.hourCardRadius)
+                .stroke(WeatherStyle.Color.hourBorder, lineWidth: JournalStyle.Space.hairline)
+        )
+        .shadow(
+            color: WeatherStyle.Color.hourShadow, radius: WeatherStyle.shadowRadius,
+            y: WeatherStyle.shadowOffset)
     }
 
-    private var periodPicker: some View {
-        Picker(WeatherText.period.value, selection: $period) {
-            Text(WeatherText.night.value).tag(DayPeriod.night)
-            Text(WeatherText.morning.value).tag(DayPeriod.morning)
-            Text(WeatherText.afternoon.value).tag(DayPeriod.afternoon)
-            Text(WeatherText.evening.value).tag(DayPeriod.evening)
+    @ViewBuilder private var periodSelection: some View {
+        if dynamicTypeSize.isAccessibilitySize {
+            Picker(WeatherText.period.value, selection: $period) {
+                ForEach(DayPeriod.allCases, id: \.self) { value in Text(title(value).value).tag(value) }
+            }
+            .pickerStyle(.menu)
+        } else {
+            HStack(spacing: JournalStyle.Space.tight) {
+                ForEach(DayPeriod.allCases, id: \.self) { periodButton($0) }
+            }
+            .padding(JournalStyle.Space.compact)
+            .background(
+                WeatherStyle.Color.periodBackground,
+                in: RoundedRectangle(cornerRadius: WeatherStyle.periodRadius)
+            )
+            .padding(.horizontal, JournalStyle.Space.hairline)
+            .accessibilityElement(children: .contain).accessibilityLabel(Text(WeatherText.period.value))
         }
+    }
+
+    private func periodButton(_ value: DayPeriod) -> some View {
+        Button {
+            period = value
+        } label: {
+            Text(title(value).value)
+                .journalFont(
+                    size: WeatherStyle.FontSize.period, weight: period == value ? .semibold : .regular,
+                    relativeTo: .footnote
+                )
+                .foregroundColor(period == value ? WeatherStyle.Color.selectedPeriod : WeatherStyle.Color.periodText)
+                .frame(maxWidth: .infinity, minHeight: WeatherStyle.periodButtonHeight)
+                .background(
+                    period == value ? JournalStyle.Color.surface : JournalStyle.Color.transparent,
+                    in: RoundedRectangle(cornerRadius: WeatherStyle.periodButtonRadius)
+                )
+                .shadow(
+                    color: period == value ? WeatherStyle.Color.periodShadow : JournalStyle.Color.transparent,
+                    radius: JournalStyle.Space.tight, y: JournalStyle.Space.hairline)
+        }
+        .buttonStyle(.plain).accessibilityAddTraits(period == value ? .isSelected : [])
     }
 
     @ViewBuilder private var hourlyContent: some View {
@@ -101,20 +200,21 @@ struct DayDetailView: View {
             Text(WeatherText.noHours.value).foregroundColor(JournalStyle.Color.secondary)
         } else if dynamicTypeSize.isAccessibilitySize {
             ScrollView(.horizontal) {
-                HourlyForecastView(hours: hours).frame(
-                    minWidth: CGFloat(hours.count) * WeatherStyle.accessibleHourWidth)
+                HourlyForecastView(hours: hours, minimum: day.low, maximum: day.high)
+                    .frame(minWidth: CGFloat(hours.count) * WeatherStyle.accessibleHourWidth)
             }
         } else {
-            HourlyForecastView(hours: hours)
+            HourlyForecastView(hours: hours, minimum: day.low, maximum: day.high)
         }
     }
 
-    private var navigationTitle: some View {
-        VStack(spacing: JournalStyle.Space.hairline) {
-            Text(verbatim: name).font(JournalStyle.Font.headline)
-            Text(verbatim: WeatherPresentation.date(day.date, locale: locale)).font(JournalStyle.Font.caption)
+    private func title(_ value: DayPeriod) -> LocalizedText {
+        switch value {
+        case .night: return WeatherText.night
+        case .morning: return WeatherText.morning
+        case .afternoon: return WeatherText.afternoon
+        case .evening: return WeatherText.evening
         }
-        .accessibilityElement(children: .combine)
     }
 }
 
@@ -132,7 +232,8 @@ struct DayDetailView: View {
         private static var scene: some View {
             NavigationView {
                 DayDetailView(
-                    name: WeatherPreviewData.name, forecast: WeatherPreviewData.forecast, day: WeatherPreviewData.day)
+                    name: WeatherPreviewData.name, forecast: WeatherPreviewData.forecast,
+                    day: WeatherPreviewData.day)
             }
             .navigationViewStyle(.stack)
         }

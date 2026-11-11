@@ -28,3 +28,33 @@ enum PlacesContract {
         static let name = "name", language = "language", count = "count"
     }
 }
+
+/// 地区列表与底部搜索、概览沿用原型的尺寸和排版节奏。
+enum PlacesStyle {
+    static let titleSize: CGFloat = 30
+    static let sectionSize: CGFloat = 15
+    static let sheetTitleSize: CGFloat = 21
+    static let previewTitleSize: CGFloat = 15
+    static let bodySize: CGFloat = 15
+    static let inputSize: CGFloat = 16
+    static let noteSize: CGFloat = 12
+    static let actionSize: CGFloat = 14
+    static let resultActionSize: CGFloat = 13
+    static let backSize: CGFloat = 16
+    static let titleHeight: CGFloat = 49
+    static let backHeight: CGFloat = 44
+    static let rowHeight: CGFloat = 48
+    static let resultHeight: CGFloat = 45
+    static let rowInset: CGFloat = 13
+    static let groupRadius: CGFloat = 16
+    static let searchRadius: CGFloat = 13
+    static let fieldRadius: CGFloat = 12
+    static let iconSize: CGFloat = 20
+    static let searchBottom: CGFloat = 22
+    static let groupBottom: CGFloat = 20
+    static let groupTop: CGFloat = 10
+    static let panelInset: CGFloat = 18
+    static let addRadius: CGFloat = 18
+    static let addHorizontalInset: CGFloat = 15
+    static let addVerticalInset: CGFloat = 6
+}

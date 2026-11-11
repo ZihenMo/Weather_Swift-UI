@@ -13,23 +13,27 @@ extension AppDependencies {
         let logger = Logger(
             subsystem: Bundle.main.bundleIdentifier ?? AppConstants.logSubsystem,
             category: AppConstants.diagnosticsCategory)
-        let diagnostics = DiagnosticSink { event, error in
-            // 仅记录事件与错误分类，不输出描述、URL、响应正文或坐标。
-            var cause = error
-            if let network = error as? NetworkFailure {
-                switch network {
-                case .http(let status, _):
-                    logger.error("\(event.rawValue, privacy: .public) http=\(status, privacy: .public)")
-                    return
-                case .transport(let underlying), .decoding(let underlying): cause = underlying
-                default: break
+        let diagnostics = DiagnosticSink(
+            information: { event in
+                logger.info("\(event.rawValue, privacy: .public)")
+            },
+            record: { event, error in
+                // 仅记录事件与错误分类，不输出描述、URL、响应正文或坐标。
+                var cause = error
+                if let network = error as? NetworkFailure {
+                    switch network {
+                    case .http(let status, _):
+                        logger.error("\(event.rawValue, privacy: .public) http=\(status, privacy: .public)")
+                        return
+                    case .transport(let underlying), .decoding(let underlying): cause = underlying
+                    default: break
+                    }
                 }
-            }
-            let nsError = cause as NSError
-            logger.error(
-                "\(event.rawValue, privacy: .public) domain=\(nsError.domain, privacy: .public) code=\(nsError.code, privacy: .public)"
-            )
-        }
+                let nsError = cause as NSError
+                logger.error(
+                    "\(event.rawValue, privacy: .public) domain=\(nsError.domain, privacy: .public) code=\(nsError.code, privacy: .public)"
+                )
+            })
         let transport = HTTPTransport { request in try await session.data(for: request) }
         let client = OpenMeteoClient(transport: transport, diagnostics: diagnostics)
         let fileManager = FileManager.default

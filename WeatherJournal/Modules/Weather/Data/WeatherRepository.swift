@@ -28,6 +28,7 @@ actor WeatherRepository {
     func cached(at point: Coordinates) async -> ForecastSnapshot? {
         await restoreCache()
         guard let value = snapshots[point], value.isUsable(at: now(), policy: policy) else { return nil }
+        diagnostics.information(.forecastCacheHit)
         return value
     }
 
@@ -48,7 +49,10 @@ actor WeatherRepository {
         let previous = lastCacheWrite
         let write = Task { [cache, diagnostics] in
             await previous?.value
-            do { try await cache.write(retained) } catch { diagnostics.record(.forecastCacheWrite, error) }
+            do {
+                try await cache.write(retained)
+                diagnostics.information(.forecastCacheSaved)
+            } catch { diagnostics.record(.forecastCacheWrite, error) }
         }
         lastCacheWrite = write
         await write.value

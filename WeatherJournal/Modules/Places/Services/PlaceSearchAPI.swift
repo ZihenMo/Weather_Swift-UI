@@ -17,7 +17,7 @@ struct PlaceSearchAPI {
             ])
         return (response.results ?? []).map { record in
             var parts: [String] = []
-            for part in [record.admin1, record.country].compactMap({ $0 }) where !part.isEmpty && !parts.contains(part)
+            for part in [record.country, record.admin1].compactMap({ $0 }) where !part.isEmpty && !parts.contains(part)
             {
                 parts.append(part)
             }

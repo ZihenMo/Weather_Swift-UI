@@ -21,11 +21,13 @@ struct JournalRoot: View {
 
     var body: some View {
         NavigationView {
-            homeContent
-                .navigationTitle(WeatherText.title.value)
-                .navigationBarTitleDisplayMode(.inline)
-                .toolbar { ToolbarItem(placement: .navigationBarTrailing) { placesButton } }
-                .background { DestinationLink(item: $route, destination: destination) }
+            VStack(spacing: 0) {
+                header
+                homeContent
+            }
+            .background(JournalStyle.Color.background.ignoresSafeArea())
+            .navigationBarHidden(true)
+            .background { DestinationLink(item: $route, destination: destination) }
         }
         .navigationViewStyle(.stack)
         .task { await initialize() }
@@ -44,11 +46,27 @@ struct JournalRoot: View {
         }
     }
 
+    private var header: some View {
+        HStack {
+            Text(WeatherText.title.value)
+                .journalFont(size: JournalStyle.Size.pageTitle, weight: .bold, relativeTo: .largeTitle)
+                .accessibilityAddTraits(.isHeader)
+            Spacer()
+            placesButton
+        }
+        .foregroundColor(JournalStyle.Color.ink)
+        .frame(minHeight: JournalStyle.Size.navigationHeight)
+        .padding(.horizontal, JournalStyle.Space.page)
+    }
+
     private var placesButton: some View {
         Button {
             route = .places
         } label: {
-            Image(systemName: JournalSymbol.places).accessibilityLabel(Text(PlacesText.title.value))
+            JournalIcon(name: JournalAsset.places, size: JournalStyle.Size.navigationIcon)
+                .frame(width: JournalStyle.Size.navigationButton, height: JournalStyle.Size.navigationButton)
+                .background(JournalStyle.Color.surface, in: Circle())
+                .accessibilityLabel(Text(PlacesText.title.value))
         }
         .disabled(!initialized)
         .accessibilityIdentifier(PlacesIdentifier.list)
@@ -57,7 +75,7 @@ struct JournalRoot: View {
     @ViewBuilder private func destination(_ route: HomeRoute) -> some View {
         switch route {
         case .places:
-            PlacesFlow(dependencies: dependencies, select: select)
+            PlacesFlow(home: home, dependencies: dependencies, select: select)
         case .day(let name, let forecast, let day):
             DayDetailView(name: name, forecast: forecast, day: day)
         }
@@ -89,23 +107,37 @@ struct JournalRoot: View {
 }
 
 private struct PlacesFlow: View {
+    @ObservedObject var home: WeatherViewModel
     @State private var searching = false
 
     let dependencies: AppDependencies
     let select: (Place?) -> Void
 
     var body: some View {
-        PlacesView(repository: dependencies.places, search: { searching = true }, select: select)
-            .background {
-                NavigationLink(isActive: $searching) {
-                    SearchFlow(dependencies: dependencies) { _ in
-                        searching = false
-                    }
-                } label: {
-                    EmptyView()
-                }
-                .isDetailLink(false)
+        ZStack {
+            PlacesView(
+                repository: dependencies.places, search: { searching = true }, select: select,
+                selectedPlaceID: selectedPlaceID, isDeviceSelected: home.target == .device,
+                deviceName: home.target == .device ? home.name : nil, deviceStatus: deviceStatus
+            )
+            .accessibilityHidden(searching)
+            if searching {
+                SearchFlow(dependencies: dependencies, close: { searching = false })
             }
+        }
+        .navigationBarHidden(true)
+    }
+
+    private var selectedPlaceID: Int? {
+        dependencies.places.saved.first { $0.weatherTarget == home.target }?.id
+    }
+
+    private var deviceStatus: String? {
+        switch home.phase {
+        case .failed(.denied): return WeatherText.permissionDenied.string
+        case .failed(.unavailable): return WeatherText.locationUnavailable.string
+        default: return nil
+        }
     }
 }
 
@@ -113,17 +145,23 @@ private struct SearchFlow: View {
     @State private var candidate: Place?
 
     let dependencies: AppDependencies
-    let added: (PlacesRepository.SaveResult) -> Void
+    let close: () -> Void
 
     var body: some View {
-        PlaceSearchView(
-            find: dependencies.places.find, delay: dependencies.placesPolicy.searchDelayNanoseconds,
-            sleep: dependencies.sleep, preview: { candidate = $0 }
-        )
-        .background {
-            DestinationLink(item: $candidate) { place in
-                CandidateScreen(dependencies: dependencies, place: place, close: { candidate = nil }, added: added)
+        ZStack {
+            JournalPanel(close: close) {
+                PlaceSearchView(
+                    find: dependencies.places.find, delay: dependencies.placesPolicy.searchDelayNanoseconds,
+                    sleep: dependencies.sleep, preview: { candidate = $0 }, close: close)
+            }
+            .accessibilityHidden(candidate != nil)
+            if let place = candidate {
+                JournalPanel(close: { candidate = nil }) {
+                    CandidateScreen(
+                        dependencies: dependencies, place: place, close: { candidate = nil }, added: { _ in close() }
+                    )
                     .id(place.id)
+                }
             }
         }
     }
@@ -149,7 +187,7 @@ private struct CandidateScreen: View {
 
     var body: some View {
         PlacePreviewView(repository: dependencies.places, place: place, close: close, added: added) {
-            WeatherView(model: weather, attributionURL: dependencies.attributionURL)
+            WeatherView(model: weather, isPreview: true, attributionURL: dependencies.attributionURL)
         }
     }
 }

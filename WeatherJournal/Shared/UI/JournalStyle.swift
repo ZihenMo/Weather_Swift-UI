@@ -10,7 +10,12 @@ enum JournalStyle {
         static let sky = SwiftUI.Color(red: 0.40, green: 0.54, blue: 0.60)
         static let surface = SwiftUI.Color.white
         static let onAccent = SwiftUI.Color.white
-        static let secondary = SwiftUI.Color.secondary
+        static let secondary = SwiftUI.Color(red: 83 / 255, green: 106 / 255, blue: 121 / 255)
+        static let line = SwiftUI.Color(red: 217 / 255, green: 227 / 255, blue: 235 / 255)
+        static let search = SwiftUI.Color(red: 224 / 255, green: 232 / 255, blue: 239 / 255)
+        static let field = SwiftUI.Color(red: 229 / 255, green: 235 / 255, blue: 240 / 255)
+        static let panel = SwiftUI.Color(red: 245 / 255, green: 248 / 255, blue: 251 / 255)
+        static let scrim = SwiftUI.Color(red: 22 / 255, green: 43 / 255, blue: 58 / 255).opacity(0.33)
         static let warning = SwiftUI.Color.orange.opacity(0.14)
         static let warm = SwiftUI.Color.orange
         static let track = SwiftUI.Color.gray.opacity(0.18)
@@ -40,7 +45,7 @@ enum JournalStyle {
         static let row: CGFloat = 10
         static let card: CGFloat = 12
         static let section: CGFloat = 14
-        static let page: CGFloat = 16
+        static let page: CGFloat = 15
         static let prominent: CGFloat = 20
         static let status: CGFloat = 24
     }
@@ -53,28 +58,80 @@ enum JournalStyle {
     enum Size {
         static let touchTarget: CGFloat = 44
         static let rowMinimum: CGFloat = 48
+        static let navigationHeight: CGFloat = 61
+        static let navigationButton: CGFloat = 40
+        static let navigationIcon: CGFloat = 20
+        static let pageTitle: CGFloat = 30
+        static let sectionTitle: CGFloat = 21
+        static let sectionIcon: CGFloat = 18
+        static let panelFraction: CGFloat = 0.68
+        static let panelWidth: CGFloat = 370
+        static let panelInset: CGFloat = 10
+        static let handleWidth: CGFloat = 36
+        static let handleHeight: CGFloat = 5
     }
 }
 
 enum JournalSymbol {
     static let places = "list.bullet", search = "magnifyingglass", clear = "xmark.circle.fill"
     static let close = "xmark", location = "location.fill", remove = "minus.circle"
-    static let forward = "chevron.right", refresh = "arrow.clockwise"
+    static let forward = "chevron.right", back = "chevron.left", refresh = "arrow.clockwise"
+}
+
+enum JournalAsset {
+    static let places = "places", back = "back", location = "location", search = "search", remove = "remove"
+    static let calendar = "calendar", forward = "chevron"
+}
+
+/// 原型提供的线性图标统一作为模板绘制，颜色跟随所属控件。
+struct JournalIcon: View {
+    let name: String
+    let size: CGFloat
+
+    var body: some View {
+        Image(name).renderingMode(.template).resizable().scaledToFit()
+            .frame(width: size, height: size).accessibilityHidden(true)
+    }
 }
 
 extension View {
+    func journalFont(size: CGFloat, weight: SwiftUI.Font.Weight = .regular, relativeTo: SwiftUI.Font.TextStyle = .body)
+        -> some View
+    {
+        modifier(JournalScaledFont(size: size, weight: weight, relativeTo: relativeTo))
+    }
     func journalCard() -> some View {
         background(JournalStyle.Color.surface, in: RoundedRectangle(cornerRadius: JournalStyle.Radius.card))
     }
 }
 
+private struct JournalScaledFont: ViewModifier {
+    @ScaledMetric private var size: CGFloat
+    let weight: SwiftUI.Font.Weight
+
+    init(size: CGFloat, weight: SwiftUI.Font.Weight, relativeTo: SwiftUI.Font.TextStyle) {
+        _size = ScaledMetric(wrappedValue: size, relativeTo: relativeTo)
+        self.weight = weight
+    }
+
+    func body(content: Content) -> some View { content.font(.system(size: size, weight: weight)) }
+}
+
 /// 统一视觉层级与无障碍标题语义。
 struct SectionHeading: View {
     let title: LocalizedStringKey
-    init(_ title: LocalizedStringKey) { self.title = title }
+    let icon: String?
+    init(_ title: LocalizedStringKey, icon: String? = nil) {
+        self.title = title
+        self.icon = icon
+    }
     var body: some View {
-        Text(title).font(JournalStyle.Font.section).foregroundColor(JournalStyle.Color.ink)
-            .frame(maxWidth: .infinity, alignment: .leading).accessibilityAddTraits(.isHeader)
+        HStack(spacing: JournalStyle.Space.small) {
+            if let icon { JournalIcon(name: icon, size: JournalStyle.Size.sectionIcon) }
+            Text(title).journalFont(size: JournalStyle.Size.sectionTitle, weight: .semibold, relativeTo: .title3)
+        }
+        .foregroundColor(JournalStyle.Color.ink)
+        .frame(maxWidth: .infinity, alignment: .leading).accessibilityAddTraits(.isHeader)
     }
 }
 
