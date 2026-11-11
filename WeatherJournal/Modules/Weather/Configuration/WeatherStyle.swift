@@ -2,7 +2,8 @@ import SwiftUI
 
 enum WeatherStyle {
     static let navigationHeight: CGFloat = 54
-    static let navigationTitleInset: CGFloat = 65
+    static let compactNavigationWidth: CGFloat = 330
+    static let navigationTitlePriority: Double = -1
     static let sectionTop: CGFloat = 15
     static let sectionBottom: CGFloat = 7
     static let summaryVerticalPadding: CGFloat = 16

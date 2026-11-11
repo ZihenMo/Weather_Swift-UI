@@ -173,8 +173,8 @@ struct PlacesView: View {
             JournalIcon(name: JournalAsset.remove, size: PlacesStyle.iconSize)
                 .foregroundColor(JournalStyle.Color.accent)
                 .frame(width: JournalStyle.Size.touchTarget, height: JournalStyle.Size.touchTarget)
-                .accessibilityLabel(Text(verbatim: PlacesText.removeNamed.format(place.name)))
         }
+        .accessibilityLabel(Text(verbatim: PlacesText.removeNamed.format(place.name)))
         .disabled(removing)
         .accessibilityIdentifier(PlacesIdentifier.remove(place.id))
     }

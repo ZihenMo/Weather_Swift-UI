@@ -61,6 +61,8 @@
 			66C75A11A5EBFA7427133BC4 /* PreviewStyle.swift in Sources */ = {isa = PBXBuildFile; fileRef = F1083A200943E684566E3E6B /* PreviewStyle.swift */; };
 		1F14ACD286BE4D4FC2BC2911 /* PlacesPresets.swift in Sources */ = {isa = PBXBuildFile; fileRef = A0AA494A5DCA850B40077AB2 /* PlacesPresets.swift */; };
 		E44AAD24DC47393DA2DE423F /* JournalPanel.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3AA0CAF83F5B86C8205B05C8 /* JournalPanel.swift */; };
+		663FF76895A92124F40A578C /* AutomaticRefreshTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1C22B8599DBE8513DDAD9CE2 /* AutomaticRefreshTests.swift */; };
+		3B370194E75634D376CA012A /* LocationAuthorizationTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 387E90342388AC0ED7F3C7DC /* LocationAuthorizationTests.swift */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
@@ -138,6 +140,8 @@
 			F1083A200943E684566E3E6B /* PreviewStyle.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PreviewStyle.swift; sourceTree = "<group>"; };
 		A0AA494A5DCA850B40077AB2 /* PlacesPresets.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PlacesPresets.swift; sourceTree = "<group>"; };
 		3AA0CAF83F5B86C8205B05C8 /* JournalPanel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = JournalPanel.swift; sourceTree = "<group>"; };
+		1C22B8599DBE8513DDAD9CE2 /* AutomaticRefreshTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AutomaticRefreshTests.swift; sourceTree = "<group>"; };
+		387E90342388AC0ED7F3C7DC /* LocationAuthorizationTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LocationAuthorizationTests.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXGroup section */
@@ -226,6 +230,8 @@
 		723947CC77CE915358849D3A /* WeatherJournalTests */ = {
 			isa = PBXGroup;
 			children = (
+				387E90342388AC0ED7F3C7DC /* LocationAuthorizationTests.swift */,
+				1C22B8599DBE8513DDAD9CE2 /* AutomaticRefreshTests.swift */,
 					90A70BF6CB24DE58EAED1150 /* SearchFlowTests.swift */,
 					6A3283CAF0CF5E0068A3D0C1 /* ContractTests.swift */,
 					E2C81D62F41F8CD788AA4E1E /* RecoveryAndCacheTests.swift */,
@@ -532,6 +538,8 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				3B370194E75634D376CA012A /* LocationAuthorizationTests.swift in Sources */,
+				663FF76895A92124F40A578C /* AutomaticRefreshTests.swift in Sources */,
 					8A9D377CBFB7EA08517F075D /* SearchFlowTests.swift in Sources */,
 					791C8E1AA737118949692C5A /* ContractTests.swift in Sources */,
 					67FEB02264B4A312B878CA9E /* RecoveryAndCacheTests.swift in Sources */,

@@ -42,7 +42,7 @@
 "City or district" = "Search cities or regions";
 "Clear search" = "Clear search";
 "Searching…" = "Searching…";
-"Search failed. Retry" = "Search failed. Retry";
+"Search failed. Retry" = "Search failed. Check your connection.";
 "No matches. Try another name." = "No matches. Try another name.";
 "Weather preview" = "Weather preview";
 "Close" = "Close";
@@ -82,3 +82,17 @@
 "China · Guangdong" = "China · Guangdong";
 "China · Beijing" = "China · Beijing";
 "China · Shanghai" = "China · Shanghai";
+"Tap Refresh to allow location, or choose a region." = "Tap Refresh to allow location, or choose a region.";
+"Enable location access" = "Enable location access";
+"Allow location access while using Weather in App Settings, or choose a region manually." = "Allow location access while using Weather in App Settings, or choose a region manually.";
+"Open Settings" = "Open Settings";
+"Not now" = "Not now";
+"Retry location" = "Retry location";
+"Enable current-location weather" = "Enable current-location weather";
+"Choose a region manually" = "Choose a region manually";
+"Location is temporarily unavailable" = "Location is temporarily unavailable";
+"Retry location or search for a region." = "Retry location or search for a region.";
+"You can also choose a region manually." = "You can also choose a region manually.";
+"The 7-day forecast will appear when weather is available." = "The 7-day forecast will appear when weather is available.";
+"Check your network connection and try again." = "Check your network connection and try again.";
+"Location permission pending" = "Permission pending";

@@ -16,7 +16,8 @@ enum JournalStyle {
         static let field = SwiftUI.Color(red: 229 / 255, green: 235 / 255, blue: 240 / 255)
         static let panel = SwiftUI.Color(red: 245 / 255, green: 248 / 255, blue: 251 / 255)
         static let scrim = SwiftUI.Color(red: 22 / 255, green: 43 / 255, blue: 58 / 255).opacity(0.33)
-        static let warning = SwiftUI.Color.orange.opacity(0.14)
+        static let warning = SwiftUI.Color(red: 1, green: 245 / 255, blue: 223 / 255)
+        static let secondaryAction = SwiftUI.Color(red: 237 / 255, green: 243 / 255, blue: 247 / 255)
         static let warm = SwiftUI.Color.orange
         static let track = SwiftUI.Color.gray.opacity(0.18)
     }
@@ -50,12 +51,17 @@ enum JournalStyle {
         static let status: CGFloat = 24
     }
     enum Radius {
+        static let status: CGFloat = 16
         static let notice: CGFloat = 12
         static let card: CGFloat = 17
         static let summary: CGFloat = 18
         static let hero: CGFloat = 23
     }
     enum Size {
+        static let statusPadding: CGFloat = 45
+        static let statusTitle: CGFloat = 22.5
+        static let body: CGFloat = 15
+        static let caption: CGFloat = 12
         static let touchTarget: CGFloat = 44
         static let rowMinimum: CGFloat = 48
         static let navigationHeight: CGFloat = 61
@@ -65,6 +71,7 @@ enum JournalStyle {
         static let sectionTitle: CGFloat = 21
         static let sectionIcon: CGFloat = 18
         static let panelFraction: CGFloat = 0.68
+        static let panelMinimumHeight: CGFloat = 480
         static let panelWidth: CGFloat = 370
         static let panelInset: CGFloat = 10
         static let handleWidth: CGFloat = 36
@@ -95,6 +102,14 @@ struct JournalIcon: View {
 }
 
 extension View {
+    func journalAction(primary: Bool = false) -> some View {
+        journalFont(size: JournalStyle.Size.body, weight: .medium)
+            .foregroundColor(primary ? JournalStyle.Color.onAccent : JournalStyle.Color.accent)
+            .padding(.horizontal, JournalStyle.Space.page).padding(.vertical, JournalStyle.Space.row)
+            .background(
+                primary ? JournalStyle.Color.accent : JournalStyle.Color.secondaryAction,
+                in: RoundedRectangle(cornerRadius: JournalStyle.Radius.notice))
+    }
     func journalFont(size: CGFloat, weight: SwiftUI.Font.Weight = .regular, relativeTo: SwiftUI.Font.TextStyle = .body)
         -> some View
     {
@@ -138,7 +153,7 @@ struct SectionHeading: View {
 #if DEBUG
     private struct SectionHeading_Previews: PreviewProvider {
         static var previews: some View {
-            SectionHeading(CommonText.currentLocation.value)
+            SectionHeading(CommonText.currentLocation.value, icon: JournalAsset.calendar)
                 .padding(JournalStyle.Space.page)
                 .journalPreview()
                 .previewLayout(.sizeThatFits)

@@ -42,10 +42,15 @@ struct PlaceSearchView: View {
                 .journalFont(size: PlacesStyle.sheetTitleSize, weight: .semibold, relativeTo: .title3)
                 .accessibilityAddTraits(.isHeader)
             Spacer(minLength: JournalStyle.Space.item)
-            Button(CommonText.cancel.value, action: close)
-                .journalFont(size: PlacesStyle.actionSize)
-                .foregroundColor(JournalStyle.Color.accent)
-                .frame(minHeight: JournalStyle.Size.touchTarget)
+            Button(action: close) {
+                Text(CommonText.cancel.value)
+                    .journalFont(size: PlacesStyle.actionSize)
+                    .foregroundColor(JournalStyle.Color.accent)
+                    .frame(minWidth: JournalStyle.Size.touchTarget, minHeight: JournalStyle.Size.touchTarget)
+                    .fixedSize(horizontal: true, vertical: true)
+                    .contentShape(Rectangle())
+            }
+            .buttonStyle(.plain)
         }
     }
 
@@ -90,6 +95,8 @@ struct PlaceSearchView: View {
 
 /// 结果标题和行样式统一覆盖预置、在线结果与错误恢复。
 private struct PlaceSearchResults: View {
+    @Environment(\.dynamicTypeSize) private var dynamicTypeSize
+
     let state: PlaceSearchModel.State
     let presets: [Place]
     let select: (Place) -> Void
@@ -102,8 +109,7 @@ private struct PlaceSearchResults: View {
         case .loading:
             ProgressView(PlacesText.searching.value).frame(maxWidth: .infinity).padding(JournalStyle.Space.page)
         case .failed:
-            Button(PlacesText.searchFailed.value, action: retry)
-                .frame(maxWidth: .infinity).padding(JournalStyle.Space.page)
+            ScrollView { failureNotice }
         case .results(let items) where items.isEmpty:
             Text(PlacesText.noMatches.value)
                 .journalFont(size: PlacesStyle.bodySize)
@@ -113,6 +119,45 @@ private struct PlaceSearchResults: View {
         case .results(let items):
             results(items, title: PlacesText.results.value)
         }
+    }
+
+    private var failureNotice: some View {
+        Group {
+            if dynamicTypeSize >= .xxLarge {
+                VStack(alignment: .leading, spacing: JournalStyle.Space.item) {
+                    failureMessage
+                    retryButton
+                }
+            } else {
+                HStack(spacing: JournalStyle.Space.item) {
+                    failureMessage
+                    Spacer(minLength: 0)
+                    retryButton
+                }
+            }
+        }
+        .padding(PlacesStyle.noticeInset)
+        .frame(maxWidth: .infinity, alignment: .leading)
+        .background(JournalStyle.Color.warning, in: RoundedRectangle(cornerRadius: PlacesStyle.noticeRadius))
+    }
+
+    private var failureMessage: some View {
+        Text(PlacesText.searchFailed.value)
+            .journalFont(size: PlacesStyle.noticeSize, relativeTo: .footnote)
+            .foregroundColor(JournalStyle.Color.ink)
+            .fixedSize(horizontal: false, vertical: true)
+    }
+
+    private var retryButton: some View {
+        Button(action: retry) {
+            Text(CommonText.retry.value)
+                .journalFont(size: PlacesStyle.noticeSize, relativeTo: .footnote)
+                .foregroundColor(JournalStyle.Color.accent)
+                .frame(minWidth: JournalStyle.Size.touchTarget, minHeight: JournalStyle.Size.touchTarget)
+                .fixedSize(horizontal: true, vertical: true)
+                .contentShape(Rectangle())
+        }
+        .buttonStyle(.plain)
     }
 
     private func results(_ items: [Place], title: LocalizedStringKey) -> some View {

@@ -47,9 +47,7 @@ struct WeatherCard: View {
     private var placeHeading: some View {
         HStack(spacing: JournalStyle.Space.small) {
             if isDevice {
-                Image(systemName: JournalSymbol.location)
-                    .journalFont(size: WeatherStyle.locationIcon, relativeTo: .caption)
-                    .accessibilityHidden(true)
+                JournalIcon(name: JournalAsset.location, size: WeatherStyle.locationIcon)
             }
             Text(verbatim: region + dateSuffix)
         }

@@ -39,7 +39,12 @@ struct JournalPanel<Content: View>: View {
 
     private func maximumHeight(in geometry: GeometryProxy) -> CGFloat {
         // 辅助功能字号与键盘同时出现时允许浮层使用全部可用高度。
-        typeSize.isAccessibilitySize ? geometry.size.height : geometry.size.height * JournalStyle.Size.panelFraction
+        if typeSize.isAccessibilitySize { return geometry.size.height }
+        return min(
+            geometry.size.height,
+            max(
+                JournalStyle.Size.panelMinimumHeight,
+                geometry.size.height * JournalStyle.Size.panelFraction))
     }
 }
 

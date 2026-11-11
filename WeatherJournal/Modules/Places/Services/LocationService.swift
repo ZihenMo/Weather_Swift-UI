@@ -14,6 +14,16 @@ final class LocationService: NSObject, CLLocationManagerDelegate {
     private let now: () -> Date
     private let sleep: (UInt64) async throws -> Void
     private let diagnostics: DiagnosticSink
+    private lazy var authorizationReader = makeManager()
+
+    var authorization: LocationAuthorization {
+        switch (manager ?? authorizationReader).authorizationStatus {
+        case .authorizedAlways, .authorizedWhenInUse: return .authorized
+        case .denied, .restricted: return .denied
+        case .notDetermined: return .notDetermined
+        @unknown default: return .notDetermined
+        }
+    }
 
     init(
         makeManager: @escaping () -> CLLocationManager,
@@ -68,6 +78,10 @@ final class LocationService: NSObject, CLLocationManagerDelegate {
 
     func locationManager(_ manager: CLLocationManager, didUpdateLocations locations: [CLLocation]) {
         guard manager === self.manager else { return }
+        guard authorization == .authorized else {
+            finish(.failure(authorization == .denied ? LocationProblem.denied : LocationProblem.unavailable))
+            return
+        }
         guard
             let fix = locations.last(where: {
                 $0.horizontalAccuracy >= 0 && CLLocationCoordinate2DIsValid($0.coordinate)

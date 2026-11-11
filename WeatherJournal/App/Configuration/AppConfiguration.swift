@@ -1,4 +1,5 @@
 import Foundation
+import UIKit
 
 struct AppConfiguration {
     enum Key {
@@ -29,6 +30,7 @@ struct AppConfiguration {
 enum ConfigurationError: Error { case invalidValue(String) }
 
 enum AppConstants {
+    static var settingsURL: URL? { URL(string: UIApplication.openSettingsURLString) }
     static let disableLiveServices = "WJ_DISABLE_LIVE_SERVICES"
     static let enabledFlag = "1"
     static let logSubsystem = "WeatherJournal"

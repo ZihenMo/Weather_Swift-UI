@@ -57,4 +57,10 @@ enum PlacesStyle {
     static let addRadius: CGFloat = 18
     static let addHorizontalInset: CGFloat = 15
     static let addVerticalInset: CGFloat = 6
+    static let compactHeadingWidth: CGFloat = 350
+    static let minimumTitleScale: CGFloat = 0.8
+    static let titleLayoutPriority: Double = -1
+    static let noticeSize: CGFloat = 13
+    static let noticeInset: CGFloat = 16
+    static let noticeRadius: CGFloat = 16
 }

@@ -1,12 +1,13 @@
 # 天气
 
-面向 iOS 15 及以上 iPhone 的天气应用，提供当前位置与常用地点的天气查询。
+面向 iOS 15 及以上 iPhone 的天气应用，提供当前位置与常用地区的天气查询。
 
 ## 主要能力
 
 - 查看当前天气、未来七天预报及逐小时气温和降水概率。
-- 搜索、预览和收藏地点，恢复上次选择。
-- 使用缓存查看离线天气，并明确显示数据时间与来源。
+- 搜索、预览和收藏地区，恢复上次选择。
+- 前台自动更新天气，保留天气数据时间与 Open-Meteo 来源说明。
+- 定位权限引导、从设置返回自动检查，以及无需定位的预置地区查询。
 - 支持简体中文、繁体中文、英语及辅助功能字号。
 
 ## 项目组织
@@ -55,8 +56,8 @@ WeatherJournal/
 
 ## 数据来源
 
-天气与地点搜索由 Open-Meteo 提供，设备定位与地名解析使用 Core Location。
+天气与地区搜索由 Open-Meteo 提供，设备定位与地名解析使用 Core Location。
 
 - [天气接口](https://open-meteo.com/en/docs)
-- [地点搜索接口](https://open-meteo.com/en/docs/geocoding-api)
+- [地区搜索接口](https://open-meteo.com/en/docs/geocoding-api)
 - [服务使用条款](https://open-meteo.com/en/terms)

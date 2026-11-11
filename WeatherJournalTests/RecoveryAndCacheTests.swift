@@ -88,8 +88,8 @@ final class RecoveryAndCacheTests: XCTestCase {
         XCTAssertNil(expired)
     }
 
-    /// A failed fresh location keeps only a clearly tagged cached snapshot for the previously used coordinates.
-    func testDeniedLocationUsesExplicitPreviousLocationFallback() async throws {
+    /// 定位被拒绝时不得继续展示历史定位天气，即使恢复的快照仍在有效期内。
+    func testDeniedLocationClearsPreviousLocationSnapshot() async throws {
         let snapshot = ForecastSnapshot(
             point: point, forecast: try WeatherRepository.map(TestDependencies.response()),
             fetchedAt: TestDependencies.now)
@@ -101,9 +101,9 @@ final class RecoveryAndCacheTests: XCTestCase {
             locate: { _ in throw LocationProblem.denied }, cachedName: { _, _ in nil }, lookup: { _, _ in nil })
         model.restoreDevicePoint(point)
         await model.load(.device, language: "en", forceNetwork: true).value
-        XCTAssertEqual(model.source, .previousLocation)
         XCTAssertEqual(model.phase, .failed(.denied))
-        XCTAssertEqual(model.forecast?.temperature, 20)
+        XCTAssertNil(model.snapshot)
+        XCTAssertNil(model.forecast)
     }
 
     /// Fresh snapshots avoid automatic requests, while an explicit refresh always reaches the transport.

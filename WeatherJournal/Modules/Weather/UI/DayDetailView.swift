@@ -6,6 +6,7 @@ struct DayDetailView: View {
     @Environment(\.locale) private var locale
     @Environment(\.dynamicTypeSize) private var dynamicTypeSize
     @State private var period: DayPeriod
+    @State private var availableWidth: CGFloat = 0
 
     let name: String
     let forecast: Forecast
@@ -28,24 +29,31 @@ struct DayDetailView: View {
                     .padding(.horizontal, JournalStyle.Space.tight)
                 hourlySection
             }
+            .background {
+                GeometryReader { geometry in
+                    JournalStyle.Color.transparent.onAppear { availableWidth = geometry.size.width }
+                        .onChange(of: geometry.size.width) { availableWidth = $0 }
+                }
+            }
             .padding(.horizontal, JournalStyle.Space.page).padding(.bottom, JournalStyle.Space.page)
         }
         .background(JournalStyle.Color.background.ignoresSafeArea()).navigationBarHidden(true)
     }
 
     @ViewBuilder private var navigationHeader: some View {
-        if dynamicTypeSize.isAccessibilitySize {
+        if dynamicTypeSize >= .xxLarge || availableWidth < WeatherStyle.compactNavigationWidth {
             VStack(alignment: .leading, spacing: JournalStyle.Space.item) {
                 backButton
                 navigationTitle.frame(maxWidth: .infinity)
             }
         } else {
-            ZStack {
-                navigationTitle.padding(.horizontal, WeatherStyle.navigationTitleInset)
-                HStack {
-                    backButton
-                    Spacer(minLength: 0)
-                }
+            HStack(spacing: JournalStyle.Space.item) {
+                backButton.frame(minWidth: 0, maxWidth: .infinity, alignment: .leading)
+                navigationTitle.lineLimit(1).minimumScaleFactor(WeatherStyle.minimumLabelScale)
+                    .layoutPriority(WeatherStyle.navigationTitlePriority)
+                    .frame(minWidth: 0, maxWidth: .infinity)
+                JournalStyle.Color.transparent.frame(minWidth: 0, maxWidth: .infinity)
+                    .accessibilityHidden(true).allowsHitTesting(false)
             }
             .frame(minHeight: WeatherStyle.navigationHeight)
         }
@@ -61,7 +69,9 @@ struct DayDetailView: View {
             }
             .journalFont(size: WeatherStyle.FontSize.back, relativeTo: .callout)
             .foregroundColor(JournalStyle.Color.accent)
-            .frame(minHeight: JournalStyle.Size.touchTarget)
+            .frame(minWidth: JournalStyle.Size.touchTarget, minHeight: JournalStyle.Size.touchTarget)
+            .fixedSize(horizontal: true, vertical: true)
+            .contentShape(Rectangle())
         }
         .buttonStyle(.plain)
     }

@@ -61,7 +61,7 @@ extension AppDependencies {
                 backupID: { UUID().uuidString }),
             acquire: location.locate, resolve: location.district,
             find: PlaceSearchAPI(client: client, endpoint: configuration.searchURL).find,
-            policy: placesPolicy, now: now, diagnostics: diagnostics)
+            policy: placesPolicy, now: now, diagnostics: diagnostics, authorization: { location.authorization })
         let weather = WeatherRepository(
             fetch: ForecastAPI(client: client, endpoint: configuration.forecastURL).fetch,
             cache: FileForecastStore(file: support.appendingPathComponent(WeatherContract.cacheFileName), files: files),

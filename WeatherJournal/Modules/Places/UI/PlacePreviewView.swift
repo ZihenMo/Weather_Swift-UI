@@ -5,10 +5,12 @@ struct PlacePreviewView<Content: View>: View {
     @Environment(\.dynamicTypeSize) private var dynamicTypeSize
     @ObservedObject var repository: PlacesRepository
     @State private var adding = false
+    @State private var availableWidth: CGFloat = 0
 
     let place: Place
     let close: () -> Void
     let added: (PlacesRepository.SaveResult) -> Void
+    var savingChanged: (Bool) -> Void = { _ in }
     @ViewBuilder let content: () -> Content
 
     var body: some View {
@@ -18,18 +20,27 @@ struct PlacePreviewView<Content: View>: View {
             content()
         }
         .background(JournalStyle.Color.panel)
+        .background {
+            GeometryReader { geometry in
+                JournalStyle.Color.transparent.onAppear { availableWidth = geometry.size.width }
+                    .onChange(of: geometry.size.width) { availableWidth = $0 }
+            }
+        }
     }
 
     @ViewBuilder private var heading: some View {
-        if dynamicTypeSize.isAccessibilitySize {
+        if usesStackedHeading {
             VStack(spacing: JournalStyle.Space.small) {
                 title
                 actions
             }
         } else {
-            ZStack {
-                title
-                actions
+            HStack(spacing: JournalStyle.Space.item) {
+                closeButton.frame(minWidth: 0, maxWidth: .infinity, alignment: .leading)
+                title.lineLimit(1).minimumScaleFactor(PlacesStyle.minimumTitleScale)
+                    .layoutPriority(PlacesStyle.titleLayoutPriority)
+                    .frame(minWidth: 0, maxWidth: .infinity)
+                addButton.frame(minWidth: 0, maxWidth: .infinity, alignment: .trailing)
             }
         }
     }
@@ -37,7 +48,12 @@ struct PlacePreviewView<Content: View>: View {
     private var title: some View {
         Text(PlacesText.preview.value)
             .journalFont(size: PlacesStyle.previewTitleSize, weight: .semibold)
+            .multilineTextAlignment(.center)
             .accessibilityAddTraits(.isHeader)
+    }
+
+    private var usesStackedHeading: Bool {
+        dynamicTypeSize >= .xxLarge || availableWidth < PlacesStyle.compactHeadingWidth
     }
 
     private var actions: some View {
@@ -49,12 +65,17 @@ struct PlacePreviewView<Content: View>: View {
     }
 
     private var closeButton: some View {
-        Button(CommonText.close.value, action: close)
-            .journalFont(size: PlacesStyle.actionSize)
-            .foregroundColor(JournalStyle.Color.accent)
-            .frame(minHeight: JournalStyle.Size.touchTarget)
-            .disabled(adding)
-            .accessibilityIdentifier(PlacesIdentifier.closePreview)
+        Button(action: close) {
+            Text(CommonText.close.value)
+                .journalFont(size: PlacesStyle.actionSize)
+                .foregroundColor(JournalStyle.Color.accent)
+                .frame(minWidth: JournalStyle.Size.touchTarget, minHeight: JournalStyle.Size.touchTarget)
+                .fixedSize(horizontal: true, vertical: true)
+                .contentShape(Rectangle())
+        }
+        .buttonStyle(.plain)
+        .disabled(adding)
+        .accessibilityIdentifier(PlacesIdentifier.closePreview)
     }
 
     private var addButton: some View {
@@ -68,8 +89,11 @@ struct PlacePreviewView<Content: View>: View {
                     isSaved || adding ? JournalStyle.Color.search : JournalStyle.Color.accent,
                     in: RoundedRectangle(cornerRadius: PlacesStyle.addRadius)
                 )
-                .frame(minHeight: JournalStyle.Size.touchTarget)
+                .frame(minWidth: JournalStyle.Size.touchTarget, minHeight: JournalStyle.Size.touchTarget)
+                .fixedSize(horizontal: true, vertical: true)
+                .contentShape(Rectangle())
         }
+        .buttonStyle(.plain)
         .disabled(adding || isSaved)
         .accessibilityIdentifier(PlacesIdentifier.add)
     }
@@ -78,9 +102,11 @@ struct PlacePreviewView<Content: View>: View {
 
     private func add() {
         adding = true
+        savingChanged(true)
         Task {
             let result = await repository.add(place)
             adding = false
+            savingChanged(false)
             if result != .alreadySaved { added(result) }
         }
     }

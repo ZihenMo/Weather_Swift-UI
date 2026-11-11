@@ -15,7 +15,8 @@ struct AppDependencies {
     func weatherModel(for target: WeatherTarget) -> WeatherViewModel {
         WeatherViewModel(
             target: target, weather: weather, locate: places.currentPoint,
-            cachedName: places.cachedName, lookup: places.name, policy: weatherPolicy, now: now, sleep: sleep)
+            cachedName: places.cachedName, lookup: places.name, policy: weatherPolicy, now: now, sleep: sleep,
+            authorization: places.authorization)
     }
 }
 

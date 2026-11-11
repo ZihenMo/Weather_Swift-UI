@@ -3,7 +3,7 @@
 "Current location" = "目前位置";
 "Selected place" = "已選地區";
 "Weather as of %@ · local" = "天氣資料時間 %@（當地）";
-"Refresh" = "更新";
+"Refresh" = "重新整理";
 "Update failed. Showing the last forecast." = "天氣暫未更新，請檢查網絡連線。";
 "7-day forecast" = "七天預報";
 "Weather details" = "天氣詳情";
@@ -42,7 +42,7 @@
 "City or district" = "搜尋城市或地區";
 "Clear search" = "清除搜尋";
 "Searching…" = "正在搜尋…";
-"Search failed. Retry" = "搜尋失敗，點此重試";
+"Search failed. Retry" = "搜尋失敗，請檢查網絡連線。";
 "No matches. Try another name." = "找不到相符地區，請試試其他名稱。";
 "Weather preview" = "天氣概覽";
 "Close" = "關閉";
@@ -82,3 +82,17 @@
 "China · Guangdong" = "中國 · 廣東";
 "China · Beijing" = "中國 · 北京";
 "China · Shanghai" = "中國 · 上海";
+"Tap Refresh to allow location, or choose a region." = "定位權限尚未決定，點擊重新整理以請求授權，或手動選擇地區。";
+"Enable location access" = "開啟定位權限";
+"Allow location access while using Weather in App Settings, or choose a region manually." = "請前往 App 設定，允許「天氣」在使用期間取用位置。也可以手動選擇地區。";
+"Open Settings" = "前往設定";
+"Not now" = "暫不";
+"Retry location" = "重試定位";
+"Enable current-location weather" = "開啟目前位置天氣";
+"Choose a region manually" = "手動選擇地區";
+"Location is temporarily unavailable" = "暫時無法取得位置";
+"Retry location or search for a region." = "可以重試定位，或手動搜尋地區。";
+"You can also choose a region manually." = "也可以手動選擇地區。";
+"The 7-day forecast will appear when weather is available." = "取得天氣後將顯示七天預報。";
+"Check your network connection and try again." = "請檢查網絡連線後重試。";
+"Location permission pending" = "定位權限待確認";

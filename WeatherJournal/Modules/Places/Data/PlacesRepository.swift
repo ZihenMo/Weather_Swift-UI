@@ -32,6 +32,7 @@ final class PlacesRepository: ObservableObject {
     private let acquire: () async throws -> Coordinates
     private let resolve: (Coordinates, String) async -> String?
     let find: (String, String) async throws -> [Place]
+    let authorization: () -> LocationAuthorization
     private let policy: PlacesPolicy
     private let now: () -> Date
     private let diagnostics: DiagnosticSink
@@ -48,7 +49,8 @@ final class PlacesRepository: ObservableObject {
         store: PlaceStore, acquire: @escaping () async throws -> Coordinates,
         resolve: @escaping (Coordinates, String) async -> String?,
         find: @escaping (String, String) async throws -> [Place],
-        policy: PlacesPolicy, now: @escaping () -> Date, diagnostics: DiagnosticSink
+        policy: PlacesPolicy, now: @escaping () -> Date, diagnostics: DiagnosticSink,
+        authorization: @escaping () -> LocationAuthorization = { .authorized }
     ) {
         self.store = store
         self.acquire = acquire
@@ -57,6 +59,7 @@ final class PlacesRepository: ObservableObject {
         self.policy = policy
         self.now = now
         self.diagnostics = diagnostics
+        self.authorization = authorization
     }
 
     func restore() async throws {
@@ -186,16 +189,33 @@ final class PlacesRepository: ObservableObject {
     }
 
     func currentPoint(refresh: Bool) async throws -> Coordinates {
-        if let acquiring { return try await acquiring.value }
+        let permission = authorization()
+        if permission != .authorized { device = nil }
+        guard permission != .denied else { throw LocationProblem.denied }
+        if let acquiring {
+            let point = try await acquiring.value
+            try requireLocationPermission()
+            return point
+        }
         if !refresh, let device { return device }
         let task = Task { () throws -> Coordinates in
             defer { acquiring = nil }
             let point = try await acquire()
+            // 授权可能在取位期间被修改，迟到坐标不能重新填入会话缓存。
+            try requireLocationPermission()
             device = point
             return point
         }
         acquiring = task
         return try await task.value
+    }
+
+    private func requireLocationPermission() throws {
+        let permission = authorization()
+        guard permission == .authorized else {
+            device = nil
+            throw permission == .denied ? LocationProblem.denied : LocationProblem.unavailable
+        }
     }
 
     func cachedName(at point: Coordinates, language: String) -> String? {

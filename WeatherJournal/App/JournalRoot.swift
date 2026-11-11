@@ -8,9 +8,13 @@ private enum HomeRoute {
 /// 应用导航与恢复入口；收藏读取失败由仓库提示，不阻断天气页面。
 struct JournalRoot: View {
     @Environment(\.locale) private var locale
+    @Environment(\.scenePhase) private var scenePhase
+    @Environment(\.openURL) private var openURL
     @StateObject private var home: WeatherViewModel
     @State private var initialized = false
     @State private var route: HomeRoute?
+    @State private var showsSettings = false
+    @State private var offeredSettings = false
 
     let dependencies: AppDependencies
 
@@ -32,13 +36,22 @@ struct JournalRoot: View {
         .navigationViewStyle(.stack)
         .task { await initialize() }
         .onChange(of: home.lastDevicePoint) { dependencies.session.remember($0) }
+        .onChange(of: home.phase) { _ in checkLocationAccess() }
+        .onChange(of: scenePhase) { if $0 == .active { checkLocationAccess() } }
+        .alert(WeatherText.enableLocation.value, isPresented: $showsSettings) {
+            Button(WeatherText.notNow.value, role: .cancel) {}
+            Button(WeatherText.openSettings.value, action: openSettings)
+        } message: {
+            Text(WeatherText.settingsExplanation.value)
+        }
     }
 
     @ViewBuilder private var homeContent: some View {
         if initialized {
             WeatherView(
                 model: home, attributionURL: dependencies.attributionURL,
-                openPlaces: { route = .places }, openDay: { route = .day($0, $1, $2) }
+                openPlaces: { route = .places }, openDay: { route = .day($0, $1, $2) },
+                requestLocationSettings: { showsSettings = true }
             )
             .safeAreaInset(edge: .bottom) { PlacesPersistenceNotice(repository: dependencies.places) }
         } else {
@@ -66,8 +79,8 @@ struct JournalRoot: View {
             JournalIcon(name: JournalAsset.places, size: JournalStyle.Size.navigationIcon)
                 .frame(width: JournalStyle.Size.navigationButton, height: JournalStyle.Size.navigationButton)
                 .background(JournalStyle.Color.surface, in: Circle())
-                .accessibilityLabel(Text(PlacesText.title.value))
         }
+        .accessibilityLabel(Text(PlacesText.title.value))
         .disabled(!initialized)
         .accessibilityIdentifier(PlacesIdentifier.list)
     }
@@ -96,7 +109,24 @@ struct JournalRoot: View {
         home.restoreDevicePoint(dependencies.session.devicePoint)
         home.load(dependencies.session.target, language: JournalLocalization.language(for: locale), forceNetwork: true)
         initialized = true
+        checkLocationAccess()
         await places
+    }
+
+    private func checkLocationAccess() {
+        guard initialized else { return }
+        home.checkAuthorization(language: JournalLocalization.language(for: locale))
+        let authorization = dependencies.places.authorization()
+        if authorization != .denied { offeredSettings = false }
+        // 同一拒绝状态只自动提示一次；手动“前往设置”仍可再次打开引导。
+        if home.target == .device, authorization == .denied, !offeredSettings {
+            offeredSettings = true
+            showsSettings = true
+        }
+    }
+
+    private func openSettings() {
+        if let url = AppConstants.settingsURL { openURL(url) }
     }
 
     private func restorePlaces() async {
@@ -107,6 +137,7 @@ struct JournalRoot: View {
 }
 
 private struct PlacesFlow: View {
+    @Environment(\.locale) private var locale
     @ObservedObject var home: WeatherViewModel
     @State private var searching = false
 
@@ -118,9 +149,10 @@ private struct PlacesFlow: View {
             PlacesView(
                 repository: dependencies.places, search: { searching = true }, select: select,
                 selectedPlaceID: selectedPlaceID, isDeviceSelected: home.target == .device,
-                deviceName: home.target == .device ? home.name : nil, deviceStatus: deviceStatus
+                deviceName: deviceName, deviceStatus: deviceStatus
             )
             .accessibilityHidden(searching)
+            .allowsHitTesting(!searching)
             if searching {
                 SearchFlow(dependencies: dependencies, close: { searching = false })
             }
@@ -132,10 +164,20 @@ private struct PlacesFlow: View {
         dependencies.places.saved.first { $0.weatherTarget == home.target }?.id
     }
 
+    private var deviceName: String? {
+        guard dependencies.places.authorization() == .authorized, let point = home.lastDevicePoint else { return nil }
+        return dependencies.places.cachedName(at: point, language: JournalLocalization.language(for: locale))
+    }
+
     private var deviceStatus: String? {
+        switch dependencies.places.authorization() {
+        case .denied: return WeatherText.permissionDenied.string
+        case .notDetermined: return WeatherText.permissionPending.string
+        case .authorized: break
+        }
+        guard home.target == .device else { return nil }
         switch home.phase {
-        case .failed(.denied): return WeatherText.permissionDenied.string
-        case .failed(.unavailable): return WeatherText.locationUnavailable.string
+        case .failed(.unavailable): return WeatherText.locationFailureTitle.string
         default: return nil
         }
     }
@@ -143,6 +185,8 @@ private struct PlacesFlow: View {
 
 private struct SearchFlow: View {
     @State private var candidate: Place?
+    @State private var adding = false
+    @State private var isVisible = true
 
     let dependencies: AppDependencies
     let close: () -> Void
@@ -155,15 +199,25 @@ private struct SearchFlow: View {
                     sleep: dependencies.sleep, preview: { candidate = $0 }, close: close)
             }
             .accessibilityHidden(candidate != nil)
+            .allowsHitTesting(candidate == nil)
             if let place = candidate {
-                JournalPanel(close: { candidate = nil }) {
+                JournalPanel(close: closeCandidate) {
                     CandidateScreen(
-                        dependencies: dependencies, place: place, close: { candidate = nil }, added: { _ in close() }
+                        dependencies: dependencies, place: place, close: closeCandidate,
+                        added: { _ in finishAdding(place) },
+                        savingChanged: { adding = $0 }
                     )
                     .id(place.id)
                 }
             }
         }
+        .onDisappear { isVisible = false }
+    }
+
+    private func closeCandidate() { if !adding { candidate = nil } }
+
+    private func finishAdding(_ place: Place) {
+        if isVisible, candidate?.id == place.id { close() }
     }
 }
 
@@ -174,19 +228,24 @@ private struct CandidateScreen: View {
     let place: Place
     let close: () -> Void
     let added: (PlacesRepository.SaveResult) -> Void
+    let savingChanged: (Bool) -> Void
     init(
         dependencies: AppDependencies, place: Place, close: @escaping () -> Void,
-        added: @escaping (PlacesRepository.SaveResult) -> Void
+        added: @escaping (PlacesRepository.SaveResult) -> Void, savingChanged: @escaping (Bool) -> Void
     ) {
         self.dependencies = dependencies
         self.place = place
         self.close = close
         self.added = added
+        self.savingChanged = savingChanged
         _weather = StateObject(wrappedValue: dependencies.weatherModel(for: place.weatherTarget))
     }
 
     var body: some View {
-        PlacePreviewView(repository: dependencies.places, place: place, close: close, added: added) {
+        PlacePreviewView(
+            repository: dependencies.places, place: place, close: close, added: added,
+            savingChanged: savingChanged
+        ) {
             WeatherView(model: weather, isPreview: true, attributionURL: dependencies.attributionURL)
         }
     }
