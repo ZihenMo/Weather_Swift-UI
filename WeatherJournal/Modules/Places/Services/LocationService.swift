@@ -3,12 +3,12 @@ import Foundation
 
 /// 将系统代理回调转换为单次异步取位，并按时间戳排除过期位置。
 @MainActor
-final class LocationService: NSObject, CLLocationManagerDelegate {
+final class LocationService: NSObject, @preconcurrency CLLocationManagerDelegate {
     private var manager: CLLocationManager?
     private var result: CheckedContinuation<Coordinates, Error>?
     private var deadline: Task<Void, Never>?
     private var retry: Task<Void, Never>?
-    private let makeManager: () -> CLLocationManager
+    private let makeManager: @MainActor () -> CLLocationManager
     private let geocode: (CLLocation, Locale) async throws -> [CLPlacemark]
     private let policy: PlacesPolicy
     private let now: () -> Date
@@ -26,7 +26,7 @@ final class LocationService: NSObject, CLLocationManagerDelegate {
     }
 
     init(
-        makeManager: @escaping () -> CLLocationManager,
+        makeManager: @escaping @MainActor () -> CLLocationManager,
         geocode: @escaping (CLLocation, Locale) async throws -> [CLPlacemark],
         policy: PlacesPolicy, now: @escaping () -> Date,
         sleep: @escaping (UInt64) async throws -> Void, diagnostics: DiagnosticSink
